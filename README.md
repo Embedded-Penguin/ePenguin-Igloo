@@ -1,4 +1,4 @@
-# ePenguin-igloo
+# ePenguin-Igloo
 
 ### What is Igloo?
 
