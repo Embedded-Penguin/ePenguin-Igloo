@@ -1,0 +1,3 @@
+[submodule "ePenguin-Software-Framework"]
+	path = ePenguin-Software-Framework
+	url = https://github.com/Embedded-Penguin/ePenguin-Software-Framework.git
