@@ -1,9 +1,10 @@
 [package]
-name = "ePenguin-igloo"
+name = "igloo"
 version = "0.1.0"
 authors = ["Penguin <...>"]
 edition = "2018"
-
+repository = "https://github.com/Embedded-Penguin/ePenguin-igloo/"
+readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
