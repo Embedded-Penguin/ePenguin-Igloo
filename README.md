@@ -6,7 +6,7 @@ Igloo is a package and project manager. It is used for bare metal (for now only 
 
 ### How does Igloo help with this problem?
 
-This tool allows you to create projects for supported mcus instantly. As long as your hardware is supported, Igloo will just make the project for you. It also allows you to add pre-written software modules, just in case you don't want to write your own.
+This tool allows you to create projects for supported mcus instantly. As long as your hardware is supported, Igloo will just make the project for you. It also allows you to add pre-written software modules, just in case you don't want to write your own. This tool also provides a way to debug your code, flash your mcu, and quickly switch between mcus.
 
 ### Status Guide
 | Icon               | Description         |
