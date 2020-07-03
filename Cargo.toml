@@ -5,6 +5,9 @@ authors = ["Penguin <...>"]
 edition = "2018"
 repository = "https://github.com/Embedded-Penguin/ePenguin-igloo/"
 readme = "README.md"
+exclude = [
+        "old/",
+]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
