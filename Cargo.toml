@@ -9,7 +9,8 @@ description = "Igloo is a package and project manager. It is used for bare metal
 exclude = [
         "old/",
 ]
-license=""
+license="GNU GPLv3"
+license-file="license.txt"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
