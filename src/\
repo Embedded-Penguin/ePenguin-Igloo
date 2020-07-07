@@ -1,0 +1,67 @@
+#[macro_use]
+extern crate clap;
+use clap::{Arg, App};
+
+fn main()
+{
+	let str1 = "v";
+	let str2 = crate_version!();
+	let str3 = str1.to_owned() + str2;
+	println!("{}", str3);
+	let matches = App::new("Igloo")
+		.version(&*("v".to_owned() + crate_version!()))
+		.author(crate_authors!())
+		.about("Stuff")
+		.arg(Arg::with_name("v")
+			 .short('v')
+			 .multiple(true)
+			 .about("Sets the level of verbosity"))
+		.subcommand(App::new("new")
+					.about("Creates a new igloo project")
+					.arg(
+						Arg::new("NAME")
+							.required(true)
+							.about("The name of your new project")))
+		.subcommand(App::new("run")
+					.about("Builds and runs project on target selected in config file")
+					.arg(Arg::new("RELEASE")
+						 .short('R')
+						 .long("release")
+						 .about("Run as the release build"))
+					.arg(Arg::new("DEBUG")
+						 .short('D')
+						 .long("debug")
+						 .about("Run as the debug build"))
+					.arg(Arg::new("FRESH")
+						 .short('F')
+						 .long("fresh")
+						 .about("Clean project, compile, and run")))
+		.subcommand(App::new("clean")
+					.about("Cleans project")
+					.version("0.0")
+					.arg(Arg::new("debug")
+						 .short('d')
+						 .about("print some debug information verbosely")))
+		.get_matches();
+
+
+	match matches.subcommand()
+	{
+		("new", Some(new_matches)) =>
+		{
+			println!("Creating new project named {}", new_matches.value_of("NAME").unwrap());
+		}
+		("run", Some(run_matches)) =>
+		{
+			("RELEASE") => println!("Running as release build"),
+			("DEBUG") => println!("Running as debug build"),
+			("FRESH") => println!("Running as fresh!"),
+			("", None) => println!("No subarg was used!"),
+			_ => unreachable!(),
+		}
+		("", None) => println!("No subcommand was used"),
+		_ => unreachable!(),
+	}
+
+
+}
