@@ -3,6 +3,10 @@ extern crate clap;
 use clap::{Arg, App, ArgGroup};
 use std::str::FromStr;
 use std::process;
+use std::path::Path;
+use std::fs;
+use std::fs::{File, OpenOptions};
+use std::os::unix;
 enum BuildTypes
 {
 	Release,
@@ -32,7 +36,7 @@ fn main()
 		author: crate_authors!().to_owned(),
 		description: crate_description!().to_owned(),
 	};
-	let matches = App::new(_igloo.name)
+	let matches = App::new(&*_igloo.name)
 		.version(&*_igloo.version)
 		.author(&*_igloo.author)
 		.about(&*_igloo.description)
@@ -87,7 +91,7 @@ fn main()
 	{
 		("new", Some(new_matches)) =>
 		{
-			println!("Creating new project named {}", new_matches.value_of("NAME").unwrap());
+			igloo_new(&_igloo, new_matches.value_of("NAME").unwrap());
 		}
 
 		("run", Some(run_matches)) =>
@@ -113,6 +117,8 @@ fn main()
 				_igloo.release_mode = true;
 				_igloo.debug_mode = false;
 			}
+
+			igloo_run(&_igloo);
 
 
 		}
@@ -143,7 +149,35 @@ fn main()
 		_ => unreachable!(),
 	}
 }
+fn igloo_new_with_dir(igloo_inst: &Igloo, prj_name: &str, prj_dir: &str)
+{
+	// WIP
+}
+fn igloo_new(igloo_inst: &Igloo, prj_name: &str)
+{
+	let path = Path::new(prj_name);
+	if path.exists()
+	{
+		println!("Project already exists. Exiting...");
+		process::exit(1);
+	}
 
+	println!("Making new project named {}", path.display());
+	match fs::create_dir(prj_name)
+	{
+		Err(why) => println!("! {:?}", why.kind()),
+		Ok(_) => {},
+	}
+
+	if cfg!(target_family = "unix")
+	{
+		println!("You are on unix!\n");
+	}
+	else
+	{
+		println!("only unix is currently supported!");
+	}
+}
 fn igloo_run(igloo_inst: &Igloo)
 {
 	
