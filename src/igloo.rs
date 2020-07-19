@@ -4,6 +4,7 @@ use std::vec::Vec;
 use std::string::String;
 use std::collections::HashMap;
 use config::*;
+use std::error::Error;
 
 use clap::{Arg, App};
 enum BuildType
@@ -11,16 +12,24 @@ enum BuildType
 	Release,
 	Debug,
 }
-// used for managing existing igloo projects
-// Igloo Project Manager - A struct for holding all
-// information pertaining to the current Igloo Project
-// An igloo project uses the .igloo folder to maintain
-// knowledge of its existence.
 pub struct ProjectManager
 {
-	
+	makeManifest: MakeManifest,
+	mcuManifest: McuManifest,
 }
 
+impl ProjectManager
+{
+	pub fn get_config() -> Self
+	{
+		let mut conf = Config::default();
+		ProjectManager
+		{
+			makeManifest: MakeManifest::from_config(&mut conf),
+			mcuManifest: McuManifest::from_config(&mut conf),
+		}
+	}
+}
 // used for managing cli requests for new and existing igloo projects
 pub struct CliManager<'b>
 {
@@ -28,33 +37,32 @@ pub struct CliManager<'b>
 	debug_mode: bool,
 	release_mode: bool,
 	fresh_mode: bool,
-	version: String,
-	name: String,
+	version: &'b str,
+	name: &'b str,
 	author: &'b str,
 	description: &'b str,
 }
 
 impl<'b> CliManager<'b>
 {
-	pub fn new(this: &'b Self) -> Self
+	pub fn new() -> Self
 	{
-		let _version = "v".to_owned() + crate_version!();
 		CliManager
 		{
-			version: _version.to_owned(),
-			name: crate_name!().to_owned(),
+			version: concat!("v", crate_version!()),
+			name: crate_name!(),
 			author: crate_authors!(),
 			description: crate_description!(),
 			debug_mode: true,
 			release_mode: false,
 			fresh_mode: false,
-			app: clap::App::new(this.name)
-				.author(this.author)
-				.version(&*this.version)
-				.about(this.description),
-
+			app: clap::App::new(crate_name!())
+				.author(crate_authors!())
+				.version(concat!("v", crate_version!())),
 		}
 	}
+
+
 }
 // Make Manifest contains default flags, files, and
 // include directories. User files, flags, and directories

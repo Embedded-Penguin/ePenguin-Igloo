@@ -6,6 +6,8 @@ fn main()
 {
 	println!("Hi");
 	let _igloo = igloo::CliManager::new();
+	let pm = igloo::ProjectManager::get_config();
+	
 // 	let mut _igloo: Igloo = Igloo
 // 	{
 // 		debug_mode: true,
