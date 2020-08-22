@@ -5,7 +5,7 @@ mod igloo;
 use clap::{crate_version, crate_description, crate_authors, App, Arg, AppSettings, ArgMatches};
 use config::*;
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 fn main()
 {
 	let ig = igloo::Igloo::New();

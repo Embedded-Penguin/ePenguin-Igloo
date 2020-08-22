@@ -22,6 +22,7 @@ pub enum IglooErrType
 	IGLOO_CONFIG_FOUND = 			3,
 	IGLOO_UNKNOWN_INST_TYPE = 		4,
 	IGLOO_NEW_CALLED_INSIDE_PRJ = 	5,
+	IGLOO_FOLDER_ALREADY_EXISTS = 	6,
 }
 
 use IglooInstType::*;
@@ -150,7 +151,6 @@ impl Igloo
 			IGLOO_NULL => res_err = IGLOO_ERR_UNKNOWN,
 			IGLOO_NEW =>
 			{
-				
 				if let ("new", new_matches) = self.cli_conf.subcommand()
 				{
 					let prj_name: &str = new_matches.unwrap().value_of("project_name").unwrap();
@@ -161,16 +161,25 @@ impl Igloo
 					if std::path::Path::new(".igloo").exists()
 					{
 						res_err = IGLOO_NEW_CALLED_INSIDE_PRJ;
+						break;
 
 					}
-					if std::path::Path::new(prj_name).exists()
+
+					// Check if the project folder already exists
+					// Don't want to accidentally overwrite anything
+					let prj_path = std::path::Path::new(prj_name);
+					if prj_path.exists()
 					{
-
+						res_err = IGLOO_FOLDER_ALREADY_EXISTS;
+						break;
 					}
+					let prj_dir = std::fs::create_dir(prj_path).unwrap();
+					println!("{:?}", prj_path.canonicalize().unwrap());
+					// populate new dir with defaults!
 				}
 				else
 				{
-				
+					panic!("Unknown error?");
 				}
 			}
 			IGLOO_FLASH =>
