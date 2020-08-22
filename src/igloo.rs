@@ -25,6 +25,18 @@ pub enum IglooErrType
 	IGLOO_FOLDER_ALREADY_EXISTS = 	6,
 }
 
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub struct IglooEnvInfo
+{
+	// Current Working Directory
+	cwd: std::path::PathBuf,
+	// Home Directory
+	hd: std::path::PathBuf,
+	// ESF Directory
+	esfd: std::path::PathBuf,
+}
+
 use IglooInstType::*;
 use IglooErrType::*;
 
@@ -35,6 +47,7 @@ pub struct Igloo
 {
 	conf: config::Config,
 	cli_conf: clap::ArgMatches,
+	env_info: IglooEnvInfo,
 }
 
 impl Igloo
@@ -50,6 +63,27 @@ impl Igloo
 		Igloo
 		{
 			conf: config::Config::default(),
+			env_info:
+			{
+				IglooEnvInfo
+				{
+					cwd: std::env::current_dir().unwrap(),
+					hd: std::env::home_dir().unwrap(),
+					esfd: match std::env::var("IGLOO_DIR")
+					{
+						Ok(v) =>
+						{
+							std::path::PathBuf::from(v.to_owned() + "/ePenguin-Software-Framework")
+						}
+						Err(e) =>
+						{
+							// Note: Need to change New to return errors instead of exiting early
+							println!("Error: $IGLOO_DIR not defined as an environment variable -- {:?}", e);
+							std::process::exit(1);
+						}
+					}
+				}
+			},
 			cli_conf: clap::App::new("igloo")
 				.about(clap::crate_description!())
 				.version(clap::crate_version!())
@@ -103,7 +137,9 @@ impl Igloo
 	{
 		let mut res_error = IGLOO_ERR_NONE;
 		let mut res_type = IGLOO_NULL;
-
+		println!("Current Directory: {:?}", self.env_info.cwd.display());
+		println!("ESF Directory: {:?}", self.env_info.esfd.display());
+		println!("Home Directory: {:?}", self.env_info.hd.display());
 		match self.cli_conf.subcommand_name()
 		{
 			Some("new") =>
@@ -145,7 +181,7 @@ impl Igloo
 	pub fn run(&self, inst_type: IglooInstType) -> Result<String, IglooErrType>
 	{
 		let mut res_err = IGLOO_ERR_NONE;
-
+		
 		loop { match inst_type
 		{
 			IGLOO_NULL => res_err = IGLOO_ERR_UNKNOWN,
@@ -167,15 +203,15 @@ impl Igloo
 
 					// Check if the project folder already exists
 					// Don't want to accidentally overwrite anything
-					let prj_path = std::path::Path::new(prj_name);
-					if prj_path.exists()
+					let mut prj_path_buf = std::path::PathBuf::from(prj_name);
+					if std::path::Path::new(prj_name).exists()
 					{
 						res_err = IGLOO_FOLDER_ALREADY_EXISTS;
 						break;
 					}
-					let prj_dir = std::fs::create_dir(prj_path).unwrap();
-					println!("{:?}", prj_path.canonicalize().unwrap());
-					// populate new dir with defaults!
+
+					// Create new directory
+					let active_dir = self.env_info.cwd.clone();
 				}
 				else
 				{
