@@ -11,7 +11,8 @@ fn main()
 	let ig = igloo::Igloo::New();
 	match ig.start()
 	{
-		Ok(it) => {
+		Ok(it) =>
+		{
 			match ig.run(it)
 			{
 				Ok(s) => println!("{}", s),

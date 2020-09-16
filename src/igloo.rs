@@ -181,7 +181,6 @@ impl Igloo
 	pub fn run(&self, inst_type: IglooInstType) -> Result<String, IglooErrType>
 	{
 		let mut res_err = IGLOO_ERR_NONE;
-		
 		loop { match inst_type
 		{
 			IGLOO_NULL => res_err = IGLOO_ERR_UNKNOWN,
@@ -203,7 +202,6 @@ impl Igloo
 
 					// Check if the project folder already exists
 					// Don't want to accidentally overwrite anything
-					let mut prj_path_buf = std::path::PathBuf::from(prj_name);
 					if std::path::Path::new(prj_name).exists()
 					{
 						res_err = IGLOO_FOLDER_ALREADY_EXISTS;
@@ -211,7 +209,45 @@ impl Igloo
 					}
 
 					// Create new directory
-					let active_dir = self.env_info.cwd.clone();
+					let mut active_dir = self.env_info.cwd.clone();
+
+					println!("Active Directory: {:?}", active_dir.display());
+					active_dir.push(prj_name);
+					match std::fs::create_dir(&active_dir)
+					{
+						Err(e) => println!("{:?}", e),
+						_ => (),
+					}
+					println!("Active Directory: {:?}", active_dir.display());
+					println!("Creating .igloo dir...");
+					match std::fs::create_dir(std::path::Path::new(&active_dir).join(".igloo"))
+					{
+						Err(e) => println!("{:?}", e),
+						_ => (),
+					}
+					match std::fs::create_dir(std::path::Path::new(&active_dir).join("src"))
+					{
+						Err(e) => println!("{:?}", e),
+						_ => (),
+					}
+					match std::fs::create_dir(std::path::Path::new(&active_dir).join("inc"))
+					{
+						Err(e) => println!("{:?}", e),
+						_ => (),
+					}
+					match std::fs::create_dir(std::path::Path::new(&active_dir).join("cfg"))
+					{
+						Err(e) => println!("{:?}", e),
+						_ => (),
+					}
+					println!("Displaying contents of {:?}", active_dir.display());
+					for entry in active_dir.read_dir().unwrap()
+					{
+						let dir = entry.unwrap();
+						println!("{:?}", dir.file_name());
+					}
+
+
 				}
 				else
 				{
@@ -226,7 +262,7 @@ impl Igloo
 			{
 
 			}
-			_ => println!("Stufff"),
+			_ => println!("Unhandled case: {:?}", inst_type),
 		} break; }
 		if res_err == IGLOO_ERR_NONE
 		{

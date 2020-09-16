@@ -1,3 +1,6 @@
 /target
 **/*.rs.bk
 README.md.temp
+GTAGS
+GRTAGS
+GPATH
