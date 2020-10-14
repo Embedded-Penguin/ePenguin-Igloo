@@ -240,14 +240,17 @@ impl Igloo
 						Err(e) => println!("{:?}", e),
 						_ => (),
 					}
+					match std::fs::create_dir(std::path::Path::new(&active_dir).join("ESF"))
+					{
+						Err(e) => println!("{:?}", e),
+						_ => (),
+					}
 					println!("Displaying contents of {:?}", active_dir.display());
 					for entry in active_dir.read_dir().unwrap()
 					{
 						let dir = entry.unwrap();
 						println!("{:?}", dir.file_name());
 					}
-
-
 				}
 				else
 				{

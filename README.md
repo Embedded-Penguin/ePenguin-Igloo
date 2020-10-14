@@ -32,9 +32,7 @@ This tool allows you to create projects for supported mcus instantly. As long as
 | Windows  | :exclamation: |
 | Linux    | :exclamation: |
 | MacOS    | :exclamation: |
-
 ### Installation -- TBD
-
-### Usage -- TBD
-
+### Usage -- TBklfjdslkfjlksdjflksdjflkjfi
 ### How to contribute -- TBD
+fhdhejslenfghuyehggjhk

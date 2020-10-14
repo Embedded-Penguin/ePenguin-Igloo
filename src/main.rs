@@ -6,21 +6,23 @@ use clap::{crate_version, crate_description, crate_authors, App, Arg, AppSetting
 use config::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+
+#[allow(unused_variables)]
+#[allow(unused_imports)]
 fn main()
 {
 	let ig = igloo::Igloo::New();
-	match ig.start()
+	let start_ret = match ig.start()
 	{
 		Ok(it) =>
 		{
 			match ig.run(it)
 			{
-				Ok(s) => println!("{}", s),
+				Ok(rt) => println!("{:?}", rt),
 				Err(e) => println!("Run Error: {:?}", e),
 			}
 		}
 		Err(e) => println!("Error: {:?}", e),
-	}
-
+	};
 
 }
