@@ -69,7 +69,7 @@ impl Igloo
 				{
 					cwd: std::env::current_dir().unwrap(),
 					hd: std::env::home_dir().unwrap(),
-					esfd: match std::env::var("IGLOO_DIR")
+					esfd: match std::env::var("ESF_DIR")
 					{
 						Ok(v) =>
 						{
@@ -78,7 +78,7 @@ impl Igloo
 						Err(e) =>
 						{
 							// Note: Need to change New to return errors instead of exiting early
-							println!("Error: $IGLOO_DIR not defined as an environment variable -- {:?}", e);
+							println!("Error: $ESF_DIR not defined as an environment variable -- {:?}", e);
 							std::process::exit(1);
 						}
 					}
@@ -275,8 +275,6 @@ impl Igloo
 		{
 			Err(res_err)
 		}
-
-
 	}
 }
 
