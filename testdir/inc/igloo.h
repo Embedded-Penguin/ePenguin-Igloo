@@ -1,1 +1,1 @@
-#include <samd21.h>
+#include <sam.h>

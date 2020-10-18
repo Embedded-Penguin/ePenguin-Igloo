@@ -1,5 +1,5 @@
-src/main.d src/main.o: ../src/main.c ../inc/igloo.h ../ESF/mcu/inc/sam.h \
- ../ESF/mcu/inc/samd21j18a.h \
+ESF/mcu/src/startup_samd21j18a.d ESF/mcu/src/startup_samd21j18a.o: \
+ ../ESF/mcu/src/startup_samd21j18a.c ../ESF/mcu/inc/samd21j18a.h \
  /usr/lib/gcc/arm-none-eabi/10.2.0/include/stdint.h \
  /usr/arm-none-eabi/include/stdint.h \
  /usr/arm-none-eabi/include/machine/_default_types.h \
@@ -23,8 +23,6 @@ src/main.d src/main.o: ../src/main.c ../inc/igloo.h ../ESF/mcu/inc/sam.h \
  ../ESF/mcu/inc/component/tc.h ../ESF/mcu/inc/component/tcc.h \
  ../ESF/mcu/inc/component/usb.h ../ESF/mcu/inc/component/wdt.h \
  ../ESF/mcu/inc/pio/samd21j18a.h
-../inc/igloo.h:
-../ESF/mcu/inc/sam.h:
 ../ESF/mcu/inc/samd21j18a.h:
 /usr/lib/gcc/arm-none-eabi/10.2.0/include/stdint.h:
 /usr/arm-none-eabi/include/stdint.h:

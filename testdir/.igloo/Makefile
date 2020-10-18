@@ -76,14 +76,14 @@ src \
 ESF/mcu/src
 
 OBJS+= \
-ESF/mcu/src/startup_samd21.o \
-ESF/mcu/src/system_samd21.o \
+ESF/mcu/src/startup_samd21j18a.o \
+ESF/mcu/src/system_samd21j18a.o \
 src/main.o
 
 # List the object files
 OBJS_AS_ARGS+= \
-$(QUOTE)ESF/mcu/src/startup_samd21.o$(QUOTE) \
-$(QUOTE)ESF/mcu/src/system_samd21.o$(QUOTE) \
+$(QUOTE)ESF/mcu/src/startup_samd21j18a.o$(QUOTE) \
+$(QUOTE)ESF/mcu/src/system_samd21j18a.o$(QUOTE) \
 $(QUOTE)src/main.o$(QUOTE)
 
 # List the directories containing header files

@@ -95,7 +95,14 @@ impl Igloo
 							clap::Arg::new("project_name")
 								.required(true)
 								.about("The name of the project to be created"),
-						),
+						)
+						.arg(
+							clap::Arg::new("target")
+								.required(true)
+								.about("MCU Target")
+								.short('t')
+								.long("target")
+								.takes_value(true)),
 				)
 				.subcommand(
 					clap::App::new("run")
@@ -188,8 +195,9 @@ impl Igloo
 			{
 				if let ("new", new_matches) = self.cli_conf.subcommand()
 				{
-					let prj_name: &str = new_matches.unwrap().value_of("project_name").unwrap();
-
+					let prj_name: &str = new_matches.unwrap().value_of("project_name")
+						.unwrap();
+					let target: &str = new_matches.unwrap().value_of("target").unwrap();
 					// Check if we are already inside of an igloo project
 					// Creating an igloo project inside an igloo project
 					// is a no no
