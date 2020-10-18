@@ -6,3 +6,8 @@
 // --- Read Default Targets manifest toml
 // --- generate projects core manifest toml
 // --- Spawn user manifest config
+
+pub struct IglooPrj
+{
+
+}
