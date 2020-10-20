@@ -1,4 +1,5 @@
 use crate::igloo_action::IglooAction;
+use crate::igloo_prj::IglooPrj;
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum IglooInstType
@@ -24,6 +25,9 @@ pub enum IglooErrType
 	IGLOO_UNKNOWN_INST_TYPE = 		4,
 	IGLOO_NEW_CALLED_INSIDE_PRJ = 	5,
 	IGLOO_FOLDER_ALREADY_EXISTS = 	6,
+	IGLOO_INVALID_PROJECT_NAME = 	7,
+	IGLOO_ENV_INFO_INVALID = 		8,
+	IGLOO_INVALID_TARGET = 		9,
 }
 
 #[derive(Debug)]
@@ -46,9 +50,10 @@ use IglooErrType::*;
 /// things happen.
 pub struct Igloo
 {
-	conf: config::Config,
 	cli_conf: clap::ArgMatches,
-	env_info: IglooEnvInfo,
+	pub env_info: IglooEnvInfo,
+	pub make_manifest: config::Config,
+	pub target_manifest: config::Config,
 }
 
 impl Igloo
@@ -63,31 +68,9 @@ impl Igloo
 	{
 		Igloo
 		{
-			conf: config::Config::default(),
-			env_info:
-			{
-				IglooEnvInfo
-				{
-					cwd: std::env::current_dir().unwrap(),
-					hd: std::env::home_dir().unwrap(),
-					esfd: match std::env::var("ESF_DIR")
-					{
-						Ok(v) =>
-						{
-							std::path::PathBuf::from(v.to_owned()
-													 + "/ePenguin-Software-Framework")
-						}
-						Err(e) =>
-						{
-							// Note: Need to change new to return errors
-							// instead of exiting early
-							println!("Error: $ESF_DIR not defined as an environment\
-									  variable -- {:?}", e);
-							std::process::exit(1);
-						}
-					}
-				}
-			},
+			env_info: IglooEnvInfo::info(),
+			make_manifest: config::Config::new(),
+			target_manifest: config::Config::new(),
 			cli_conf: clap::App::new("igloo")
 				.about(clap::crate_description!())
 				.version(clap::crate_version!())
@@ -150,9 +133,19 @@ impl Igloo
 	{
 		let mut res_error = IGLOO_ERR_NONE;
 		let mut res_type = IGLOO_NULL;
-		println!("Current Directory: {:?}", self.env_info.cwd.display());
-		println!("ESF Directory: {:?}", self.env_info.esfd.display());
-		println!("Home Directory: {:?}", self.env_info.hd.display());
+		// Load manifests first
+		self.make_manifest.clone().merge(
+			config::File::with_name(
+				IglooEnvInfo::info().esfd.join("manifest/make-manifest.toml")
+					.to_str()
+					.unwrap()))
+			.unwrap();
+		self.target_manifest.clone().merge(
+			config::File::with_name(
+				IglooEnvInfo::info().esfd.join("manifest/target-manifest.toml")
+					.to_str()
+					.unwrap()))
+			.unwrap();
 		match self.cli_conf.subcommand_name()
 		{
 			Some("new") =>
@@ -194,6 +187,7 @@ impl Igloo
 	pub fn run(&self, inst_type: IglooInstType) -> Result<String, IglooErrType>
 	{
 		let mut res_err = IGLOO_ERR_NONE;
+		let mut prj: IglooPrj;
 		loop { match inst_type
 		{
 			IGLOO_NULL => res_err = IGLOO_ERR_UNKNOWN,
@@ -207,10 +201,11 @@ impl Igloo
 					let target: &str = new_matches.unwrap()
 						.value_of("target")
 						.unwrap();
-					IglooAction::new(&self.env_info, prj_name, target);
+					IglooAction::new(prj_name, target);
 				}
 				else
 				{
+					println!("HELLOOOO");
 					panic!("Unknown error?");
 				}
 
@@ -236,3 +231,29 @@ impl Igloo
 	}
 }
 
+impl IglooEnvInfo
+{
+	pub fn info() -> IglooEnvInfo
+	{
+		IglooEnvInfo
+		{
+			cwd: std::env::current_dir().unwrap(),
+			hd: std::env::home_dir().unwrap(),
+			esfd: match std::env::var("ESF_DIR")
+			{
+				Ok(v) =>
+				{
+					std::path::PathBuf::from(&v.to_owned())
+				}
+				Err(e) =>
+				{
+					// Note: Need to change new to return errors
+					// instead of exiting early
+					println!("Error: $ESF_DIR not defined as an environment\
+							  variable -- {:?}", e);
+					std::process::exit(1);
+				}
+			}
+		}
+	}
+}

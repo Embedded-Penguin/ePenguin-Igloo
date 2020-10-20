@@ -3,12 +3,13 @@ extern crate clap;
 extern crate config;
 mod igloo;
 mod igloo_action;
+mod igloo_prj;
+mod igloo_manifest;
 
 use clap::{crate_version, crate_description, crate_authors, App, Arg, AppSettings, ArgMatches};
 use config::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::os::unix::fs;
 
 
 

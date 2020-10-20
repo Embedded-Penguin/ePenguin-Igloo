@@ -8,7 +8,7 @@ pub mod IglooAction
 		res_err
 	}
 
-	pub fn new(env_info: &IglooEnvInfo, prj_name: &str, target: &str)
+	pub fn new(prj_name: &str, target: &str)
 			   -> IglooErrType
 	{
 		let mut res_err: IglooErrType = IglooErrType::IGLOO_ERR_NONE;
@@ -28,7 +28,7 @@ pub mod IglooAction
 			return res_err
 		}
 		// Create new directory
-		let mut active_dir = env_info.cwd.clone();
+		let mut active_dir = IglooEnvInfo::info().cwd;
 		println!("Active Directory: {:?}", active_dir.display());
 		active_dir.push(prj_name);
 		match std::fs::create_dir(&active_dir)
