@@ -1,17 +1,20 @@
+#![allow(warnings)]
 extern crate clap;
 extern crate config;
 mod igloo;
+mod igloo_action;
 
 use clap::{crate_version, crate_description, crate_authors, App, Arg, AppSettings, ArgMatches};
 use config::*;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::os::unix::fs;
-#[allow(unused_variables)]
-#[allow(unused_imports)]
+
+
+
 fn main()
 {
-	let ig = igloo::Igloo::New();
+	let ig = igloo::Igloo::new();
 	let start_ret = match ig.start()
 	{
 		Ok(it) =>

@@ -1,3 +1,4 @@
+use crate::igloo_action::IglooAction;
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum IglooInstType
@@ -30,11 +31,11 @@ pub enum IglooErrType
 pub struct IglooEnvInfo
 {
 	// Current Working Directory
-	cwd: std::path::PathBuf,
+	pub cwd: std::path::PathBuf,
 	// Home Directory
-	hd: std::path::PathBuf,
+	pub hd: std::path::PathBuf,
 	// ESF Directory
-	esfd: std::path::PathBuf,
+	pub esfd: std::path::PathBuf,
 }
 
 use IglooInstType::*;
@@ -52,13 +53,13 @@ pub struct Igloo
 
 impl Igloo
 {
-	/// The New function creates an instance of igloo. The idea is I create an igloo,
+	/// The new function creates an instance of igloo. The idea is I create an igloo,
 	/// run start on it so I can collect environment information and process what command
 	/// the user would like to run, and then I run that command or deal with errors.
 	///
 	/// This function handles all cli input and stores it. It is parsed for errors in the
 	/// start function.
-	pub fn New() -> Igloo
+	pub fn new() -> Igloo
 	{
 		Igloo
 		{
@@ -73,12 +74,15 @@ impl Igloo
 					{
 						Ok(v) =>
 						{
-							std::path::PathBuf::from(v.to_owned() + "/ePenguin-Software-Framework")
+							std::path::PathBuf::from(v.to_owned()
+													 + "/ePenguin-Software-Framework")
 						}
 						Err(e) =>
 						{
-							// Note: Need to change New to return errors instead of exiting early
-							println!("Error: $ESF_DIR not defined as an environment variable -- {:?}", e);
+							// Note: Need to change new to return errors
+							// instead of exiting early
+							println!("Error: $ESF_DIR not defined as an environment\
+									  variable -- {:?}", e);
 							std::process::exit(1);
 						}
 					}
@@ -106,11 +110,13 @@ impl Igloo
 				)
 				.subcommand(
 					clap::App::new("run")
-						.about("Compiles if needed, Flashes mcu and runs current project on default target")
+						.about("Compiles if needed, Flashes mcu and runs \
+								current project on default target")
 						.arg(
 							clap::Arg::new("build_type")
 								.required(false)
-								.about("Release or Debug build type\nDefaults to Debug"),
+								.about("Release or Debug build type\n\
+										Defaults to Debug"),
 						),
 				)
 				.subcommand(
@@ -195,75 +201,19 @@ impl Igloo
 			{
 				if let ("new", new_matches) = self.cli_conf.subcommand()
 				{
-					let prj_name: &str = new_matches.unwrap().value_of("project_name")
+					let prj_name: &str = new_matches.unwrap()
+						.value_of("project_name")
 						.unwrap();
-					let target: &str = new_matches.unwrap().value_of("target").unwrap();
-					// Check if we are already inside of an igloo project
-					// Creating an igloo project inside an igloo project
-					// is a no no
-					if std::path::Path::new(".igloo").exists()
-					{
-						res_err = IGLOO_NEW_CALLED_INSIDE_PRJ;
-						break;
-
-					}
-
-					// Check if the project folder already exists
-					// Don't want to accidentally overwrite anything
-					if std::path::Path::new(prj_name).exists()
-					{
-						res_err = IGLOO_FOLDER_ALREADY_EXISTS;
-						break;
-					}
-
-					// Create new directory
-					let mut active_dir = self.env_info.cwd.clone();
-
-					println!("Active Directory: {:?}", active_dir.display());
-					active_dir.push(prj_name);
-					match std::fs::create_dir(&active_dir)
-					{
-						Err(e) => println!("{:?}", e),
-						_ => (),
-					}
-					println!("Active Directory: {:?}", active_dir.display());
-					println!("Creating .igloo dir...");
-					match std::fs::create_dir(std::path::Path::new(&active_dir).join(".igloo"))
-					{
-						Err(e) => println!("{:?}", e),
-						_ => (),
-					}
-					match std::fs::create_dir(std::path::Path::new(&active_dir).join("src"))
-					{
-						Err(e) => println!("{:?}", e),
-						_ => (),
-					}
-					match std::fs::create_dir(std::path::Path::new(&active_dir).join("inc"))
-					{
-						Err(e) => println!("{:?}", e),
-						_ => (),
-					}
-					match std::fs::create_dir(std::path::Path::new(&active_dir).join("cfg"))
-					{
-						Err(e) => println!("{:?}", e),
-						_ => (),
-					}
-					match std::fs::create_dir(std::path::Path::new(&active_dir).join("ESF"))
-					{
-						Err(e) => println!("{:?}", e),
-						_ => (),
-					}
-					println!("Displaying contents of {:?}", active_dir.display());
-					for entry in active_dir.read_dir().unwrap()
-					{
-						let dir = entry.unwrap();
-						println!("{:?}", dir.file_name());
-					}
+					let target: &str = new_matches.unwrap()
+						.value_of("target")
+						.unwrap();
+					IglooAction::new(&self.env_info, prj_name, target);
 				}
 				else
 				{
 					panic!("Unknown error?");
 				}
+
 			}
 			IGLOO_FLASH =>
 			{
@@ -285,5 +235,4 @@ impl Igloo
 		}
 	}
 }
-
 

@@ -1,5 +1,0 @@
-Building target: d21test.elf
-Invoking: ARM/GNU Linker
-"arm-none-eabi-gcc" -o d21test.elf "ESF/mcu/src/startup_samd21j18a.o"
-"ESF/mcu/src/system_samd21j18a.o" "src/main.o"
--Wl,--start-group -l m -Wl,--end-group -mthumb -Wl,-Map="d21test.map" --specs=nano.specs -Wl,--gc-sections
