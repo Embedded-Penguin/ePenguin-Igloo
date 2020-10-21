@@ -2,50 +2,71 @@
 pub mod IglooManifest
 {
 	use crate::igloo::{Igloo, IglooErrType, IglooEnvInfo};
-	pub fn target_exists(inst: &Igloo, name: &str) -> bool
+	pub fn target_exists(inst: &Igloo, name: &str) -> Result<bool, IglooErrType>
 	{
-		let mut ret: bool = false;
-		loop
+		let mut ret: bool = true;
+		let mut res_err = IglooErrType::IGLOO_ERR_NONE;
+		if name.is_empty()
 		{
-			if name.is_empty()
-			{
-				ret = false;
-				break;
-			}
+			return Err(IglooErrType::IGLOO_INVALID_TARGET)
+		}
 
-			let make_table = inst.target_manifest.get_table("target.make").unwrap();
-			let manifest_table = inst.target_manifest.get_table("target.manifest").unwrap();
-
-			match make_table.get(name)
+		
+		let make_table = inst.target_manifest.get_table("target.make");
+		match make_table
+		{
+			Ok(v) =>
 			{
-				Some(v) =>
+				match v.get(name)
 				{
-					println!("target.make entry for \"{}\" exists!", name);
-					ret = true;
+					Some(v) =>
+					{
+						println!("target.make entry for \"{}\" exists!", name);
+					}
+					None =>
+					{
+						println!("target.make entry for \"{}\" does not exist", name);
+						ret = false;
+					}
 				}
-				None =>
+
+			}
+			Err(e) =>
+			{
+				println!("{:?}", e);
+				return Err(IglooErrType::IGLOO_FAILED_TO_LOAD_MAKE_MAN)
+			}
+		}
+
+		if !ret
+		{
+			return Ok(ret)
+		}
+
+		let target_table = inst.target_manifest.get_table("target.manifest");
+		match target_table
+		{
+			Ok(v) =>
+			{
+				match v.get(name)
 				{
-					ret = false;
+					Some(v) =>
+					{
+						println!("target.manifest entry for \"{}\" exists!", name);
+					}
+					None =>
+					{
+						ret = false;
+					}
 				}
 			}
-
-			if !ret
+			Err(e) =>
 			{
-				break;
+				println!("{:?}", e);
+				return Err(IglooErrType::IGLOO_FAILED_TO_LOAD_TARG_MAN)
 			}
+		}
 
-			match manifest_table.get(name)
-			{
-				Some(v) =>
-				{
-					println!("target.manifest entry for \"{}\" exists!", name);
-				}
-				None =>
-				{
-					ret = false;
-				}
-			}
-		break; }
-		ret
+		Ok(ret)
 	}
 }

@@ -8,7 +8,7 @@ mod igloo_manifest;
 
 fn main()
 {
-	let ig = igloo::Igloo::new();
+	let mut ig = igloo::Igloo::new();
 	let _start_ret = match ig.start()
 	{
 		Ok(it) =>

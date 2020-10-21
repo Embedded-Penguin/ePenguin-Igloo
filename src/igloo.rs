@@ -28,10 +28,13 @@ pub enum IglooErrType
 	IGLOO_INVALID_PROJECT_NAME = 	7,
 	IGLOO_ENV_INFO_INVALID = 		8,
 	IGLOO_INVALID_TARGET = 		9,
+	IGLOO_FAILED_TO_LOAD_MAKE_MAN = 10,
+	IGLOO_FAILED_TO_LOAD_TARG_MAN = 11,
 }
 
 #[derive(Debug)]
 #[derive(PartialEq)]
+#[derive(Clone)]
 pub struct IglooEnvInfo
 {
 	// Current Working Directory
@@ -129,18 +132,18 @@ impl Igloo
 	///  It is really only here to help me debug.
 	///
 	///  The Inst Type is only returned for usage outside of this struct.
-	pub fn start(&self) -> Result<IglooInstType, IglooErrType>
+	pub fn start(&mut self) -> Result<IglooInstType, IglooErrType>
 	{
 		let mut res_error = IGLOO_ERR_NONE;
 		let mut res_type = IGLOO_NULL;
 		// Load manifests first
-		self.make_manifest.clone().merge(
+		self.make_manifest.merge(
 			config::File::with_name(
 				IglooEnvInfo::info().esfd.join("manifest/make-manifest.toml")
 					.to_str()
 					.unwrap()))
 			.unwrap();
-		self.target_manifest.clone().merge(
+		self.target_manifest.merge(
 			config::File::with_name(
 				IglooEnvInfo::info().esfd.join("manifest/target-manifest.toml")
 					.to_str()
@@ -208,7 +211,12 @@ impl Igloo
 						.unwrap().1
 						.value_of("target")
 						.unwrap();
-					IglooAction::new(prj_name, target);
+					let res_err = IglooAction::new(
+						self, prj_name, target);
+					if res_err != IglooErrType::IGLOO_ERR_NONE
+					{
+						return Err(res_err)
+					}
 				}
 				else
 				{
