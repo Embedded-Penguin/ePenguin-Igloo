@@ -193,20 +193,26 @@ impl Igloo
 			IGLOO_NULL => res_err = IGLOO_ERR_UNKNOWN,
 			IGLOO_NEW =>
 			{
-				if let ("new", new_matches) = self.cli_conf.subcommand()
+				if self.cli_conf.subcommand().unwrap().0 == "new"
 				{
-					let prj_name: &str = new_matches.unwrap()
+					let prj_name: &str = self
+						.cli_conf
+						.subcommand()
+						.unwrap().1
 						.value_of("project_name")
 						.unwrap();
-					let target: &str = new_matches.unwrap()
+
+					let target: &str = self
+						.cli_conf
+						.subcommand()
+						.unwrap().1
 						.value_of("target")
 						.unwrap();
 					IglooAction::new(prj_name, target);
 				}
 				else
 				{
-					println!("HELLOOOO");
-					panic!("Unknown error?");
+
 				}
 
 			}
