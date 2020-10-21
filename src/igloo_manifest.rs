@@ -11,7 +11,6 @@ pub mod IglooManifest
 			return Err(IglooErrType::IGLOO_INVALID_TARGET)
 		}
 
-		
 		let make_table = inst.target_manifest.get_table("target.make");
 		match make_table
 		{
@@ -69,4 +68,7 @@ pub mod IglooManifest
 
 		Ok(ret)
 	}
+
+
+
 }
