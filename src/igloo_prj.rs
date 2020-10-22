@@ -235,20 +235,7 @@ impl IglooPrj
 			.unwrap();
 		//
 		writeln!(app_file, "# ePenguin Generated Variables").unwrap();
-
-		// Get our knowns out of the way
-		match target.make_manifest.get("PROJECT_NAME")
-		{
-			None =>
-			{
-				println!("PROJECT_NAME not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "PROJECT_NAME=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
+		writeln!(app_file, "PROJECT_NAME={}", self.name);
 
 		match target.make_manifest.get("TOOLCHAIN")
 		{
