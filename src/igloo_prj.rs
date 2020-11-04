@@ -24,6 +24,7 @@ pub struct IglooTargetManifest
 {
 	links: HashMap<String, config::Value>,
 	includes: Vec<config::Value>,
+	openocd: HashMap<String, config::Value>,
 }
 
 pub struct IglooTarget
@@ -194,14 +195,51 @@ impl IglooPrj
 		{
 			let mut target_root = prj_root.join(&("target/".to_owned() + &target.name));
 			println!("{:?}", target_root.display());
-			match std::fs::create_dir(target_root)
+			match std::fs::create_dir(&target_root)
 			{
 				Err(e) => println!("{:?}", e),
 				_ => (),
 			}
 
+			// create project scripts dir
+			let mut scripts_dir = target_root.join("scripts");
+			match std::fs::create_dir(&scripts_dir)
+			{
+				Err(e) => println!("{:?}", e),
+				_ => (),
+			}
+
+			// populate scripts dir
+			//sym link gdb scripts
+			let mut gdb_scripts_paths = std::fs::read_dir(
+				&(String::from(
+					IglooEnvInfo::info()
+						.esfd.to_str()
+						.unwrap()) + "/scripts"))
+				.unwrap();
+
+			let mut gdb_scripts: std::vec::Vec<std::path::PathBuf>
+				= std::vec::Vec::new();
+			for entry in gdb_scripts_paths
+			{
+				match &entry
+				{
+					Ok(v) => if !v.path().is_dir() {
+						gdb_scripts.push(v.path()) },
+					Err(e) => println!("{:?}", e),
+				}
+			}
+
+			for file in gdb_scripts
+			{
+				println!("Project Scripts Dir: {:?}", scripts_dir);
+				println!("ePenguin Scripts Dir: {:?}", file);
+				std::os::unix::fs::symlink(
+					&file, &scripts_dir.join(&file.file_name().unwrap()));
+			}
+
+
 			let mut prj_esf_dir = self.project_dir.join("ESF");
-			println!("NEEDED {:?}", prj_esf_dir);
 			for (sym_dir, loc_in_esf) in &target.target_manifest.links
 			{
 				let link_to_dir = IglooEnvInfo::info()
@@ -210,9 +248,63 @@ impl IglooPrj
 				std::os::unix::fs::symlink(link_to_dir, prj_esf_dir.join(sym_dir)).unwrap();
 			}
 
+			self.gen_openocd_config(&target);
 			self.gen_makefile(&target);
 		}
 		IglooErrType::IGLOO_ERR_NONE
+	}
+
+	pub fn gen_openocd_config(&self, target: &IglooTarget) -> IglooErrType
+	{
+		let mut ret: IglooErrType = IglooErrType::IGLOO_ERR_NONE;
+		let mut openocd_cfg = self.project_dir.join(".igloo/target");
+		openocd_cfg.push(&target.name);
+		openocd_cfg.push("scripts");
+		openocd_cfg.push(&target.name);
+		if openocd_cfg.with_extension("cfg").exists()
+		{
+			std::fs::remove_file(openocd_cfg.with_extension("cfg"));
+		}
+
+		std::fs::File::create(
+			openocd_cfg.with_extension("cfg")).unwrap();
+		let mut ocfg_file = OpenOptions::new()
+			.write(true)
+			.append(true)
+			.open(openocd_cfg.with_extension("cfg"))
+			.unwrap();
+
+		writeln!(ocfg_file, "#\n# ePenguin Generated OpenOCD \
+							 Config Script\n#\n").unwrap();
+
+		writeln!(ocfg_file, "\n# Transport Select").unwrap();
+		writeln!(ocfg_file, "source [find interface//{}.cfg]", target
+				 .target_manifest
+				 .openocd.get("transport_cfg")
+				 .unwrap()
+				 .clone()
+				 .into_str()
+				 .unwrap()).unwrap();
+		writeln!(ocfg_file, "transport select {}", target
+				 .target_manifest
+				 .openocd.get("transport")
+				 .unwrap()
+				 .clone()
+				 .into_str()
+				 .unwrap()).unwrap();
+
+		writeln!(ocfg_file, "\n# Chip Information").unwrap();
+		writeln!(ocfg_file, "set CHIPNAME {}", target.name);
+		writeln!(ocfg_file, "source [find target//{}.cfg]", target
+				 .target_manifest
+				 .openocd.get("chip_name_cfg")
+				 .unwrap()
+				 .clone()
+				 .into_str()
+				 .unwrap()).unwrap();
+		ret
+
+
 	}
 
 	/// Generates a makefile for a target
@@ -223,7 +315,7 @@ impl IglooPrj
 		// If the Makefile already exists, trash it
 		if target_root.join("Makefile").exists()
 		{
-			std::fs::remove_file("Makefile");
+			std::fs::remove_file(target_root.join("Makefile"));
 		}
 
 		// Make our Makefile, set it to append mode
@@ -235,7 +327,8 @@ impl IglooPrj
 			.unwrap();
 		//
 		writeln!(app_file, "# ePenguin Generated Variables").unwrap();
-		writeln!(app_file, "PROJECT_NAME={}", self.name);
+		writeln!(app_file, "PROJECT_NAME={}", self.name).unwrap();
+		writeln!(app_file, "TARGET_NAME={}", target.name).unwrap();
 
 		match target.make_manifest.get("TOOLCHAIN")
 		{
@@ -859,13 +952,12 @@ endif\n").unwrap();
 			}
 			Some(v) =>
 			{
-				write!(app_file, "\n\t").unwrap();
+				write!(app_file, "\n").unwrap();
 				for cflag in v.clone().into_array().unwrap()
 				{
 					if !cflag.to_string().is_empty()
 					{
-						writeln!(app_file, " \\").unwrap();
-						write!(app_file, "\t{}", cflag).unwrap()
+						writeln!(app_file, "\t{}", cflag).unwrap()
 					}
 				}
 			},
@@ -876,7 +968,7 @@ endif\n").unwrap();
 		{
 			None =>
 			{
-				println!("DEBUG_TARGET_PREREQS Not found");
+				println!("DEBUG_PREREQS Not found");
 			}
 			Some(v) =>
 			{
@@ -897,6 +989,47 @@ endif\n").unwrap();
 			None =>
 			{
 				println!("DEBUG_CMDS Not found");
+			}
+			Some(v) =>
+			{
+				write!(app_file, "\n\t").unwrap();
+				for cflag in v.clone().into_array().unwrap()
+				{
+					if !cflag.to_string().is_empty()
+					{
+						writeln!(app_file, " \\").unwrap();
+						write!(app_file, "\t{}", cflag).unwrap()
+					}
+				}
+			},
+		}
+
+		writeln!(app_file, "\n").unwrap();
+		match target.make_manifest.get("PUSH_PREREQS")
+		{
+			None =>
+			{
+				println!("PUSH_PREREQS Not found");
+			}
+			Some(v) =>
+			{
+				write!(app_file, "push:").unwrap();
+				for cflag in v.clone().into_array().unwrap()
+				{
+					if !cflag.to_string().is_empty()
+					{
+						writeln!(app_file, "\\").unwrap();
+						write!(app_file, "{}", cflag).unwrap()
+					}
+				}
+			},
+		}
+
+		match target.make_manifest.get("PUSH_CMDS")
+		{
+			None =>
+			{
+				println!("PUSH_CMDS Not found");
 			}
 			Some(v) =>
 			{
@@ -978,8 +1111,8 @@ endif\n").unwrap();
 
 		IglooErrType::IGLOO_ERR_NONE
 	}
-}
 
+}
 impl IglooTarget
 {
 	pub fn default() -> IglooTarget
@@ -1045,7 +1178,6 @@ impl IglooTarget
 
 		})
 	}
-
 }
 
 impl IglooTargetManifest
@@ -1056,6 +1188,7 @@ impl IglooTargetManifest
 		{
 			links: HashMap::default(),
 			includes: Vec::default(),
+			openocd: HashMap::default(),
 		}
 	}
 
@@ -1078,6 +1211,8 @@ impl IglooTargetManifest
 				.unwrap()
 				.clone()
 				.into_array()
+				.unwrap(),
+			openocd: target_man.get_table("esf.openocd")
 				.unwrap(),
 		}
 	}
