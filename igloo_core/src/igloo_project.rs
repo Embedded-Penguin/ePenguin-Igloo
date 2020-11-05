@@ -22,7 +22,7 @@ pub struct IglooPrj
 {
 	name: String,
 	target_bank: Vec<IglooTarget>,
-	project_dir: std::path::PathBuf,
+	pub project_dir: std::path::PathBuf,
 }
 
 
@@ -79,10 +79,16 @@ impl IglooPrj
 
 		let mut temp: Vec<IglooTarget> = Vec::new();
 		let targ = IglooTarget::from(
-				inst,
-				String::from(target_in),
-				&_targ_make_table_name,
-				&_targ_manifest_file_name).unwrap();
+			IglooEnvInfo::get_env_info().cwd
+				.join(name_in)
+				.join(".igloo")
+				.join("target")
+				.join(target_in),
+			inst,
+			String::from(target_in),
+			&_targ_make_table_name,
+			&_targ_manifest_file_name).unwrap();
+
 		temp.push(targ);
 
 		Ok(IglooPrj

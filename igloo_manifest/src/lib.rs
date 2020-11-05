@@ -64,7 +64,7 @@ pub fn target_exists(master_mm: &Config, master_tm: &Config, name: &str)
 		return Err(InvalidTarget)
 	}
 
-	match master_mm.get_table("target.make")
+	match master_tm.get_table("target.make")
 	{
 		Ok(v) =>
 		{

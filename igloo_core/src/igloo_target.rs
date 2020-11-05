@@ -1,9 +1,13 @@
 use igloo_base::*;
 use igloo_base::IglooErrType::*;
 
-use crate::config::Config;
+use crate::IglooPrj;
 use crate::Igloo;
+
+use crate::config::Config;
 use std::collections::HashMap;
+use std::path::PathBuf;
+
 pub struct IglooTarget
 {
 	// name, links, and includes are extracted from a manifest
@@ -12,6 +16,7 @@ pub struct IglooTarget
 	pub includes: Vec<config::Value>,
 	pub openocd: HashMap<String, config::Value>,
 	pub make_manifest: HashMap<String, config::Value>,
+	pub root: PathBuf,
 }
 
 impl IglooTarget
@@ -21,6 +26,7 @@ impl IglooTarget
 		IglooTarget
 		{
 			name: String::from(""),
+			root: PathBuf::default(),
 			make_manifest: HashMap::default(),
 			links: HashMap::default(),
 			includes: Vec::default(),
@@ -28,7 +34,7 @@ impl IglooTarget
 		}
 	}
 
-	pub fn from(inst: &Igloo, name_in: String,
+	pub fn from(root: PathBuf, inst: &Igloo, name_in: String,
 				target_make_loc: &str,
 				target_man_loc: &str) -> Result<IglooTarget, IglooErrType>
 	{
@@ -93,6 +99,7 @@ impl IglooTarget
 				.unwrap(),
 			openocd: target_man.get_table("esf.openocd")
 				.unwrap(),
+			root: root,
 		})
 	}
 
