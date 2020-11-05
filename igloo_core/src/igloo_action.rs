@@ -30,7 +30,7 @@ pub fn new(inst: &Igloo, prj_name: &str, target: &str)
 		return res_err
 	}
 
-	let mut project = IglooPrj::new(inst, prj_name, target);
+	let project = IglooPrj::new(inst, prj_name, target);
 	match project
 	{
 		Err(e) =>

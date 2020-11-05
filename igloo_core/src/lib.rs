@@ -1,3 +1,4 @@
+#![allow(warnings)]
 extern crate clap;
 extern crate config;
 
@@ -27,7 +28,6 @@ mod tests {
 pub struct Igloo
 {
 	cli_conf: clap::ArgMatches,
-	env_info: IglooEnvInfo,
 	master_make_man: Config,
 	master_target_man: Config,
 }
@@ -44,7 +44,6 @@ impl Igloo
 	{
 		Igloo
 		{
-			env_info: IglooEnvInfo::get_env_info(),
 			master_make_man: Config::new(),
 			master_target_man: Config::new(),
 			cli_conf: igloo_app(),
@@ -127,11 +126,11 @@ impl Igloo
 					return Err(res_err)
 				}
 			}
-			IGLOO_FLASH =>
+			Flash =>
 			{
 
 			}
-			IGLOO_RUN =>
+			Run =>
 			{
 
 			}

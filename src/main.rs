@@ -1,15 +1,7 @@
 #![allow(warnings)]
-extern crate clap;
-extern crate config;
 
-use config::Config;
-use clap::{Arg, App, AppSettings, ArgMatches};
+use igloo_core::Igloo;
 
-use igloo_core::{Igloo, IglooErrType, IglooInstType};
-use igloo_cli;
-use igloo_make;
-use igloo_manifest;
-use igloo_agent;
 fn main()
 {
 	let mut ig = Igloo::new();

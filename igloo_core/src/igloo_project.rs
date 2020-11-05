@@ -38,11 +38,11 @@ impl IglooPrj
 		}
 	}
 
-	pub fn new(inst: &Igloo, nameIn: &str, targetIn: &str)
+	pub fn new(inst: &Igloo, name_in: &str, target_in: &str)
 			   -> Result<IglooPrj, IglooErrType>
 	{
 		let mut res_err = ErrNone;
-		if String::from(nameIn).is_empty()
+		if String::from(name_in).is_empty()
 		{
 			res_err = InvalidProjectName;
 			return Err(res_err)
@@ -52,17 +52,17 @@ impl IglooPrj
 		{
 			return Err(res_err)
 		}
-		match target_exists(&inst.master_make_man, &inst.master_target_man, targetIn)
+		match target_exists(&inst.master_make_man, &inst.master_target_man, target_in)
 		{
 			Ok(v) =>
 			{
 				if v
 				{
-					println!("Verified target exists {}", nameIn);
+					println!("Verified target exists {}", name_in);
 				}
 				else
 				{
-					println!("Couldn't verify target exists {}", nameIn);
+					println!("Couldn't verify target exists {}", name_in);
 					return Err(InvalidTarget)
 				}
 			}
@@ -73,23 +73,23 @@ impl IglooPrj
 		}
 
 		let mut _targ_make_table_name = inst.master_target_man.get_str(
-			&("target.make.".to_owned() + &targetIn)).unwrap();
+			&("target.make.".to_owned() + &target_in)).unwrap();
 		let mut _targ_manifest_file_name = inst.master_target_man.get_str(
-			&("target.manifest.".to_owned() + &targetIn)).unwrap();
+			&("target.manifest.".to_owned() + &target_in)).unwrap();
 
 		let mut temp: Vec<IglooTarget> = Vec::new();
 		let targ = IglooTarget::from(
 				inst,
-				String::from(targetIn),
+				String::from(target_in),
 				&_targ_make_table_name,
 				&_targ_manifest_file_name).unwrap();
 		temp.push(targ);
 
 		Ok(IglooPrj
 		{
-			name: String::from(nameIn),
+			name: String::from(name_in),
 			target_bank: temp,
-			project_dir: IglooEnvInfo::get_env_info().cwd.join(nameIn),
+			project_dir: IglooEnvInfo::get_env_info().cwd.join(name_in),
 		})
 	}
 
@@ -162,7 +162,7 @@ impl IglooPrj
 		ErrNone
 	}
 
-	pub fn debugManifests(&self)
+	pub fn debug_manifests(&self)
 	{
 		for target in &self.target_bank
 		{
@@ -182,10 +182,10 @@ impl IglooPrj
 	/// Generates the target directories for all targets
 	pub fn gen_targets(&self) -> IglooErrType
 	{
-		let mut prj_root = self.project_dir.join(".igloo");
+		let prj_root = self.project_dir.join(".igloo");
 		for target in &self.target_bank
 		{
-			let mut target_root = prj_root.join(&("target/".to_owned() + &target.name));
+			let target_root = prj_root.join(&("target/".to_owned() + &target.name));
 			println!("{:?}", target_root.display());
 			match std::fs::create_dir(&target_root)
 			{
@@ -194,7 +194,7 @@ impl IglooPrj
 			}
 
 			// create project scripts dir
-			let mut scripts_dir = target_root.join("scripts");
+			let scripts_dir = target_root.join("scripts");
 			match std::fs::create_dir(&scripts_dir)
 			{
 				Err(e) => println!("{:?}", e),
@@ -203,7 +203,7 @@ impl IglooPrj
 
 			// populate scripts dir
 			//sym link gdb scripts
-			let mut gdb_scripts_paths = std::fs::read_dir(
+			let gdb_scripts_paths = std::fs::read_dir(
 				&(String::from(
 					IglooEnvInfo::get_env_info()
 						.esfd.to_str()
@@ -227,11 +227,11 @@ impl IglooPrj
 				println!("Project Scripts Dir: {:?}", scripts_dir);
 				println!("ePenguin Scripts Dir: {:?}", file);
 				std::os::unix::fs::symlink(
-					&file, &scripts_dir.join(&file.file_name().unwrap()));
+					&file, &scripts_dir.join(&file.file_name().unwrap())).unwrap();
 			}
 
 
-			let mut prj_esf_dir = self.project_dir.join("ESF");
+			let prj_esf_dir = self.project_dir.join("ESF");
 			for (sym_dir, loc_in_esf) in &target.links
 			{
 				let link_to_dir = IglooEnvInfo::get_env_info()
@@ -248,14 +248,13 @@ impl IglooPrj
 
 	pub fn gen_openocd_config(&self, target: &IglooTarget) -> IglooErrType
 	{
-		let mut ret: IglooErrType = ErrNone;
 		let mut openocd_cfg = self.project_dir.join(".igloo/target");
 		openocd_cfg.push(&target.name);
 		openocd_cfg.push("scripts");
 		openocd_cfg.push(&self.name);
 		if openocd_cfg.with_extension("cfg").exists()
 		{
-			std::fs::remove_file(openocd_cfg.with_extension("cfg"));
+			std::fs::remove_file(openocd_cfg.with_extension("cfg")).unwrap();
 		}
 
 		std::fs::File::create(
@@ -284,23 +283,21 @@ impl IglooPrj
 				 .unwrap()).unwrap();
 
 		writeln!(ocfg_file, "\n# Chip Information").unwrap();
-		writeln!(ocfg_file, "set CHIPNAME {}", target.name);
+		writeln!(ocfg_file, "set CHIPNAME {}", target.name).unwrap();
 		writeln!(ocfg_file, "source [find target//{}.cfg]", target
 				 .openocd.get("chip_name_cfg")
 				 .unwrap()
 				 .clone()
 				 .into_str()
 				 .unwrap()).unwrap();
-		ret
-
-
+		ErrNone
 	}
 
 	/// Generates a makefile for a target
 	pub fn gen_makefile(&self, target: &IglooTarget) -> IglooErrType
 	{
-		let mut prj_root = self.project_dir.join(".igloo/target");
-		let mut target_root = prj_root.join(&target.name);
+		let prj_root = self.project_dir.join(".igloo/target");
+		let target_root = prj_root.join(&target.name);
 		// If the Makefile already exists, trash it
 		if target_root.join("Makefile").exists()
 		{
@@ -1032,7 +1029,7 @@ endif\n").unwrap();
 
 	pub fn gen_igloo_header(&self) -> IglooErrType
 	{
-		let mut inc_dir = self.project_dir.join("inc");
+		let inc_dir = self.project_dir.join("inc");
 		if inc_dir.join("igloo.h").exists()
 		{
 			std::fs::remove_file(inc_dir.join("igloo.h")).unwrap();
@@ -1072,7 +1069,7 @@ endif\n").unwrap();
 
 	pub fn gen_igloo_main(&self) -> IglooErrType
 	{
-		let mut src_dir = self.project_dir.join("src");
+		let src_dir = self.project_dir.join("src");
 		if src_dir.join("main.c").exists()
 		{
 			std::fs::remove_file(src_dir.join("main.c")).unwrap();
