@@ -1,0 +1,1 @@
+/storage/Shared/Documents/Projects/ePenguin/ePenguin-igloo/target/debug/libigloo_cli.rlib: /storage/Shared/Documents/Projects/ePenguin/ePenguin-igloo/igloo_base/src/env_info.rs /storage/Shared/Documents/Projects/ePenguin/ePenguin-igloo/igloo_base/src/lib.rs /storage/Shared/Documents/Projects/ePenguin/ePenguin-igloo/igloo_cli/src/lib.rs

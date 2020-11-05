@@ -1,14 +1,18 @@
 #![allow(warnings)]
 extern crate clap;
 extern crate config;
-mod igloo;
-mod igloo_action;
-mod igloo_prj;
-mod igloo_manifest;
 
+use config::Config;
+use clap::{Arg, App, AppSettings, ArgMatches};
+
+use igloo_core::{Igloo, IglooErrType, IglooInstType};
+use igloo_cli;
+use igloo_make;
+use igloo_manifest;
+use igloo_agent;
 fn main()
 {
-	let mut ig = igloo::Igloo::new();
+	let mut ig = Igloo::new();
 	let _start_ret = match ig.start()
 	{
 		Ok(it) =>
