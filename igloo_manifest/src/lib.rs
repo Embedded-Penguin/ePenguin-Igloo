@@ -55,7 +55,7 @@ pub fn get_master_target_manifest(man: &mut Config) -> IglooErrType
 /// master_mm -- Master Make Manifest
 /// master_tm -- Master Target Manifest
 /// name -- name of target
-pub fn target_exists(master_mm: &Config, master_tm: &Config, name: &str)
+pub fn target_is_valid(master_mm: &Config, master_tm: &Config, name: &str)
 					 -> Result<bool, IglooErrType>
 {
 	let mut ret: bool = true;

@@ -4,12 +4,11 @@ use igloo_manifest::*;
 
 use crate::Igloo;
 use crate::igloo_target::IglooTarget;
-
-use std::vec::Vec;
 use std::fs::OpenOptions;
 use std::fs::File;
+use std::vec::Vec;
 use std::io::prelude::*;
-
+use std::path::PathBuf;
 // New Project
 // --- Verify location
 // --- Populate base folders
@@ -23,6 +22,7 @@ pub struct IglooPrj
 	name: String,
 	target_bank: Vec<IglooTarget>,
 	pub project_dir: std::path::PathBuf,
+	root: PathBuf,
 }
 
 
@@ -35,6 +35,7 @@ impl IglooPrj
 			name: String::from(""),
 			target_bank: Vec::default(),
 			project_dir: std::path::PathBuf::default(),
+			root: PathBuf::default(),
 		}
 	}
 
@@ -52,7 +53,8 @@ impl IglooPrj
 		{
 			return Err(res_err)
 		}
-		match target_exists(&inst.master_make_man, &inst.master_target_man, target_in)
+
+		match target_is_valid(&inst.master_make_man, &inst.master_target_man, target_in)
 		{
 			Ok(v) =>
 			{
@@ -96,6 +98,8 @@ impl IglooPrj
 			name: String::from(name_in),
 			target_bank: temp,
 			project_dir: IglooEnvInfo::get_env_info().cwd.join(name_in),
+			root: PathBuf::from(
+				IglooEnvInfo::get_env_info().cwd.join(name_in)),
 		})
 	}
 
@@ -103,17 +107,14 @@ impl IglooPrj
 	{
 
 		// Create new directory
-		let mut active_dir = IglooEnvInfo::get_env_info().cwd;
-		//println!("Active Directory: {:?}", active_dir.display());
-		println!("NAME: {}", self.name);
-		active_dir.push(&self.name);
+		let mut active_dir = self.root.clone();
 		match std::fs::create_dir(&active_dir)
 		{
 			Err(e) => println!("{:?}", e),
 			_ => (),
 		}
-		//println!("Active Directory: {:?}", active_dir.display());
-		println!("Creating .igloo dir...");
+
+		// Create .igloo directory
 		match std::fs::create_dir(
 			std::path::Path::new(&active_dir)
 				.join(".igloo"))
@@ -122,6 +123,7 @@ impl IglooPrj
 			_ => (),
 		}
 
+		// Create target directory
 		match std::fs::create_dir(
 			std::path::Path::new(&active_dir)
 				.join(".igloo/target"))
@@ -130,6 +132,7 @@ impl IglooPrj
 			_ => (),
 		}
 
+		// Create src directory
 		match std::fs::create_dir(
 			std::path::Path::new(&active_dir)
 				.join("src"))
@@ -137,6 +140,8 @@ impl IglooPrj
 			Err(e) => println!("{:?}", e),
 			_ => (),
 		}
+
+		// Create inc directory
 		match std::fs::create_dir(
 			std::path::Path::new(&active_dir)
 				.join("inc"))
@@ -144,6 +149,8 @@ impl IglooPrj
 			Err(e) => println!("{:?}", e),
 			_ => (),
 		}
+
+		// Create cfg directory
 		match std::fs::create_dir(
 			std::path::Path::new(&active_dir)
 				.join("cfg"))
@@ -151,6 +158,8 @@ impl IglooPrj
 			Err(e) => println!("{:?}", e),
 			_ => (),
 		}
+
+		// Create ESF directory
 		match std::fs::create_dir(
 			std::path::Path::new(&active_dir)
 				.join("ESF"))
@@ -159,12 +168,15 @@ impl IglooPrj
 			_ => (),
 		}
 
-
-
+		// Generate Targets
 		self.gen_targets();
+
+		// Generate igloo.h
 		self.gen_igloo_header();
+
+		// Generate main.c
 		self.gen_igloo_main();
-		//self.debugManifests();
+
 		ErrNone
 	}
 
@@ -188,114 +200,13 @@ impl IglooPrj
 	/// Generates the target directories for all targets
 	pub fn gen_targets(&self) -> IglooErrType
 	{
-		let prj_root = self.project_dir.join(".igloo");
 		for target in &self.target_bank
 		{
-			let target_root = prj_root.join(&("target/".to_owned() + &target.name));
-			println!("{:?}", target_root.display());
-			match std::fs::create_dir(&target_root)
-			{
-				Err(e) => println!("{:?}", e),
-				_ => (),
-			}
-
-			// create project scripts dir
-			let scripts_dir = target_root.join("scripts");
-			match std::fs::create_dir(&scripts_dir)
-			{
-				Err(e) => println!("{:?}", e),
-				_ => (),
-			}
-
-			// populate scripts dir
-			//sym link gdb scripts
-			let gdb_scripts_paths = std::fs::read_dir(
-				&(String::from(
-					IglooEnvInfo::get_env_info()
-						.esfd.to_str()
-						.unwrap()) + "/scripts"))
-				.unwrap();
-
-			let mut gdb_scripts: std::vec::Vec<std::path::PathBuf>
-				= std::vec::Vec::new();
-			for entry in gdb_scripts_paths
-			{
-				match &entry
-				{
-					Ok(v) => if !v.path().is_dir() {
-						gdb_scripts.push(v.path()) },
-					Err(e) => println!("{:?}", e),
-				}
-			}
-
-			for file in gdb_scripts
-			{
-				println!("Project Scripts Dir: {:?}", scripts_dir);
-				println!("ePenguin Scripts Dir: {:?}", file);
-				std::os::unix::fs::symlink(
-					&file, &scripts_dir.join(&file.file_name().unwrap())).unwrap();
-			}
-
-
-			let prj_esf_dir = self.project_dir.join("ESF");
-			for (sym_dir, loc_in_esf) in &target.links
-			{
-				let link_to_dir = IglooEnvInfo::get_env_info()
-					.esfd
-					.join(&loc_in_esf.clone().into_str().unwrap());
-				std::os::unix::fs::symlink(link_to_dir, prj_esf_dir.join(sym_dir)).unwrap();
-			}
-
-			self.gen_openocd_config(&target);
+			target.generate();
+			target.populate();
+			target.generate_openocd_config();
 			self.gen_makefile(&target);
 		}
-		ErrNone
-	}
-
-	pub fn gen_openocd_config(&self, target: &IglooTarget) -> IglooErrType
-	{
-		let mut openocd_cfg = self.project_dir.join(".igloo/target");
-		openocd_cfg.push(&target.name);
-		openocd_cfg.push("scripts");
-		openocd_cfg.push(&self.name);
-		if openocd_cfg.with_extension("cfg").exists()
-		{
-			std::fs::remove_file(openocd_cfg.with_extension("cfg")).unwrap();
-		}
-
-		std::fs::File::create(
-			openocd_cfg.with_extension("cfg")).unwrap();
-		let mut ocfg_file = OpenOptions::new()
-			.write(true)
-			.append(true)
-			.open(openocd_cfg.with_extension("cfg"))
-			.unwrap();
-
-		writeln!(ocfg_file, "#\n# ePenguin Generated OpenOCD \
-							 Config Script\n#\n").unwrap();
-
-		writeln!(ocfg_file, "\n# Transport Select").unwrap();
-		writeln!(ocfg_file, "source [find interface//{}.cfg]", target
-				 .openocd.get("transport_cfg")
-				 .unwrap()
-				 .clone()
-				 .into_str()
-				 .unwrap()).unwrap();
-		writeln!(ocfg_file, "transport select {}", target
-				 .openocd.get("transport")
-				 .unwrap()
-				 .clone()
-				 .into_str()
-				 .unwrap()).unwrap();
-
-		writeln!(ocfg_file, "\n# Chip Information").unwrap();
-		writeln!(ocfg_file, "set CHIPNAME {}", target.name).unwrap();
-		writeln!(ocfg_file, "source [find target//{}.cfg]", target
-				 .openocd.get("chip_name_cfg")
-				 .unwrap()
-				 .clone()
-				 .into_str()
-				 .unwrap()).unwrap();
 		ErrNone
 	}
 

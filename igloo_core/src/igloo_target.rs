@@ -7,6 +7,9 @@ use crate::Igloo;
 use crate::config::Config;
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::fs::OpenOptions;
+use std::fs::File;
+use std::io::prelude::*;
 
 pub struct IglooTarget
 {
@@ -106,6 +109,19 @@ impl IglooTarget
 	/// generate all folders needed for the target
 	pub fn generate(&self) -> IglooErrType
 	{
+		// Create target root directory
+		match std::fs::create_dir(&self.root)
+		{
+			Err(e) => println!("{:?}", e),
+			_ => (),
+		}
+
+		// Create target scripts directory
+		match std::fs::create_dir(&self.root.join("scripts"))
+		{
+			Err(e) => println!("{:?}", e),
+			_ => (),
+		}
 
 		ErrNone
 	}
@@ -113,6 +129,53 @@ impl IglooTarget
 	/// populates all folders needed for the target
 	pub fn populate(&self) -> IglooErrType
 	{
+		let mut target_scripts_dir: PathBuf = PathBuf::from(
+			self.root.join("scripts"));
+		// Read the gdb scripts directory in ESF
+		let esf_target_scripts_dir = std::fs::read_dir(
+			&(String::from(
+				IglooEnvInfo::get_env_info()
+					.esfd.to_str()
+					.unwrap()) + "/scripts"))
+			.unwrap();
+
+		// Creating a vector to hold our gdb script file names
+		let mut gdb_scripts: std::vec::Vec<std::path::PathBuf>
+			= std::vec::Vec::new();
+
+		// Grab the files only
+		for entry in esf_target_scripts_dir
+		{
+			match &entry
+			{
+				Ok(v) => if !v.path().is_dir() {
+					gdb_scripts.push(v.path()) },
+				Err(e) => println!("{:?}", e),
+			}
+		}
+
+		// Generate each GDB script
+		for file in gdb_scripts
+		{
+			std::os::unix::fs::symlink(
+				&file, &target_scripts_dir.join(&file.file_name().unwrap())).unwrap();
+		}
+
+		// Populate the project ESF folder with our targets relevant files
+		let mut prj_esf_dir = self.root
+			.parent().unwrap()
+			.parent().unwrap()
+			.parent().unwrap().join("ESF");
+		println!("PRINTING {:?}", prj_esf_dir);
+		for (sym_dir, loc_in_esf) in &self.links
+		{
+			let link_to_dir = IglooEnvInfo::get_env_info()
+				.esfd
+				.join(&loc_in_esf.clone().into_str().unwrap());
+			std::os::unix::fs::symlink(link_to_dir, prj_esf_dir.join(sym_dir)).unwrap();
+		}
+
+
 		ErrNone
 	}
 
@@ -120,6 +183,55 @@ impl IglooTarget
 	/// this will be updated as the user edits their project toml
 	pub fn generate_makefile(&self) -> IglooErrType
 	{
+		ErrNone
+	}
+
+	/// generates the openocd config for a target
+	/// this will be updated as the user edits their project toml
+	pub fn generate_openocd_config(&self) -> IglooErrType
+	{
+		let mut openocd_cfg = PathBuf::from(&self.root);
+		openocd_cfg.push("scripts");
+		openocd_cfg.push(&self.name);
+		if openocd_cfg.with_extension("cfg").exists()
+		{
+			std::fs::remove_file(openocd_cfg.with_extension("cfg")).unwrap();
+		}
+
+		std::fs::File::create(
+			openocd_cfg.with_extension("cfg")).unwrap();
+		let mut ocfg_file = OpenOptions::new()
+			.write(true)
+			.append(true)
+			.open(openocd_cfg.with_extension("cfg"))
+			.unwrap();
+
+		writeln!(ocfg_file, "#\n# ePenguin Generated OpenOCD \
+							 Config Script\n#\n").unwrap();
+
+		writeln!(ocfg_file, "\n# Transport Select").unwrap();
+		writeln!(ocfg_file, "source [find interface//{}.cfg]", self
+				 .openocd.get("transport_cfg")
+				 .unwrap()
+				 .clone()
+				 .into_str()
+				 .unwrap()).unwrap();
+		writeln!(ocfg_file, "transport select {}", self
+				 .openocd.get("transport")
+				 .unwrap()
+				 .clone()
+				 .into_str()
+				 .unwrap()).unwrap();
+
+		writeln!(ocfg_file, "\n# Chip Information").unwrap();
+		writeln!(ocfg_file, "set CHIPNAME {}", self.name).unwrap();
+		writeln!(ocfg_file, "source [find target//{}.cfg]", self
+				 .openocd.get("chip_name_cfg")
+				 .unwrap()
+				 .clone()
+				 .into_str()
+				 .unwrap()).unwrap();
+
 		ErrNone
 	}
 }
