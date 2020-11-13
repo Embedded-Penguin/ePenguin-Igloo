@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["igloo_base"] = [{"text":"impl PartialEq&lt;IglooInstType&gt; for IglooInstType","synthetic":false,"types":[]},{"text":"impl PartialEq&lt;IglooErrType&gt; for IglooErrType","synthetic":false,"types":[]},{"text":"impl PartialEq&lt;IglooEnvInfo&gt; for IglooEnvInfo","synthetic":false,"types":[]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

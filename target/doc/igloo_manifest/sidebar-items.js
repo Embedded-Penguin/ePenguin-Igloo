@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["get_master_make_manifest","Igloo Manifest -- Responsible for all lookups in manifest files"],["get_master_target_manifest",""],["target_is_valid","master_mm -- Master Make Manifest master_tm -- Master Target Manifest name -- name of target"]]});

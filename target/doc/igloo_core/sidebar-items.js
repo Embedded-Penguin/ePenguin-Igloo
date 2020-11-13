@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["Igloo","Igloo should contain a config and any important environment information. Upon running igloo, an instanc is created, env information is stored, and then things happen."]]});
