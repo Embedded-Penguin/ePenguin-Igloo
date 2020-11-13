@@ -190,48 +190,18 @@ impl IglooTarget
 	/// this will be updated as the user edits their project toml
 	pub fn generate_openocd_config(&self) -> IglooErrType
 	{
-		let mut openocd_cfg = PathBuf::from(&self.root);
-		openocd_cfg.push("scripts");
-		openocd_cfg.push(&self.name);
-		if openocd_cfg.with_extension("cfg").exists()
-		{
-			std::fs::remove_file(openocd_cfg.with_extension("cfg")).unwrap();
-		}
+		let mut fromPath = IglooEnvInfo::get_env_info()
+			.esfd.join(self.openocd.get("scripts")
+					   .unwrap()
+					   .clone()
+					   .into_str()
+					   .unwrap())
+					   .join(&self.name).with_extension("cfg");
 
-		std::fs::File::create(
-			openocd_cfg.with_extension("cfg")).unwrap();
-		let mut ocfg_file = OpenOptions::new()
-			.write(true)
-			.append(true)
-			.open(openocd_cfg.with_extension("cfg"))
-			.unwrap();
+		let mut toPath = self.root.join("scripts")
+			.join(&self.name).with_extension("cfg");
 
-		writeln!(ocfg_file, "#\n# ePenguin Generated OpenOCD \
-							 Config Script\n#\n").unwrap();
-
-		writeln!(ocfg_file, "\n# Transport Select").unwrap();
-		writeln!(ocfg_file, "source [find interface//{}.cfg]", self
-				 .openocd.get("transport_cfg")
-				 .unwrap()
-				 .clone()
-				 .into_str()
-				 .unwrap()).unwrap();
-		writeln!(ocfg_file, "transport select {}", self
-				 .openocd.get("transport")
-				 .unwrap()
-				 .clone()
-				 .into_str()
-				 .unwrap()).unwrap();
-
-		writeln!(ocfg_file, "\n# Chip Information").unwrap();
-		writeln!(ocfg_file, "set CHIPNAME {}", self.name).unwrap();
-		writeln!(ocfg_file, "source [find target//{}.cfg]", self
-				 .openocd.get("chip_name_cfg")
-				 .unwrap()
-				 .clone()
-				 .into_str()
-				 .unwrap()).unwrap();
-
+		std::fs::copy(&fromPath, &toPath).unwrap();
 		ErrNone
 	}
 }

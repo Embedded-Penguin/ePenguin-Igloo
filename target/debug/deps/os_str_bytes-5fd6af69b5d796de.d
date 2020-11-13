@@ -1,0 +1,11 @@
+/storage/Shared/Documents/Projects/ePenguin/ePenguin-igloo/target/debug/deps/os_str_bytes-5fd6af69b5d796de.rmeta: /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/lib.rs /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/error.rs /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/common/mod.rs /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/raw.rs /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/common/raw.rs
+
+/storage/Shared/Documents/Projects/ePenguin/ePenguin-igloo/target/debug/deps/libos_str_bytes-5fd6af69b5d796de.rlib: /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/lib.rs /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/error.rs /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/common/mod.rs /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/raw.rs /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/common/raw.rs
+
+/storage/Shared/Documents/Projects/ePenguin/ePenguin-igloo/target/debug/deps/os_str_bytes-5fd6af69b5d796de.d: /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/lib.rs /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/error.rs /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/common/mod.rs /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/raw.rs /home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/common/raw.rs
+
+/home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/lib.rs:
+/home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/error.rs:
+/home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/common/mod.rs:
+/home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/raw.rs:
+/home/penguin/.cargo/registry/src/github.com-1ecc6299db9ec823/os_str_bytes-2.3.1/src/common/raw.rs:

@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["igloo_app","runs the clap initializer to get command line arguments"],["igloo_subcommand",""]]});

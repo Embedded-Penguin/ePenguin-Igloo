@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["IglooErrType",""],["IglooInstType",""]],"struct":[["IglooEnvInfo",""]]});
