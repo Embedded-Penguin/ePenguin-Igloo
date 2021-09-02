@@ -29,6 +29,7 @@ pub enum IglooInstType
 
 #[derive(Debug)]
 #[derive(PartialEq)]
+/// Igloo Error Type
 pub enum IglooErrType
 {
 	ErrNone =		 				0,
