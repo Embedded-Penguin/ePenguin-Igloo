@@ -25,6 +25,7 @@ pub enum IglooInstType
 	Clean = 4,
 	Erase = 5,
 	GenDoc = 6,
+	Info = 7,
 }
 
 #[derive(Debug)]

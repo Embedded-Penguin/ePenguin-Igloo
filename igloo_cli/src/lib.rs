@@ -49,6 +49,15 @@ pub fn igloo_app() -> ArgMatches
 								 Defaults to Debug")),)
 		.subcommand(App::new("erase")
 					.about("Erases flash from target mcu or target mcus"))
+		.subcommand(App::new("info")
+					.about("Provides info about various parts of igloo")
+					.subcommand(App::new("list")
+								.arg(Arg::new("supported-mcus")
+									 .required(false)
+									 .about("List of supported MCUs for the current version"),)
+								.arg(Arg::new("supported-boards")
+									 .required(false)
+									 .about("List of supported boards for the current version"),)))
 		.get_matches();
 
 	ret_app
@@ -79,6 +88,11 @@ pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooInstType, IglooErrType
 		{
 			println!("Igloo erase was called!");
 			_res_type = Erase;
+		}
+		Some("info") =>
+		{
+			println!("Igloo info was called!");
+			_res_type = Info;
 		}
 		None => unreachable!(),
 		_ => unreachable!(),

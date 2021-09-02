@@ -134,6 +134,10 @@ impl Igloo
 			{
 
 			}
+			Info =>
+			{
+
+			}
 			_ => println!("Unhandled case: {:?}", inst_type),
 		} break; }
 		if res_err == ErrNone
