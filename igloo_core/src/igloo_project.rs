@@ -39,6 +39,19 @@ impl IglooPrj
 		}
 	}
 
+	/// takes a PathBuf and appends .igloo to it
+	/// this tests if the requested directory is an igloo project
+	pub fn is_igloo_prj(path: &std::path::PathBuf) -> bool
+	{
+		let mut ret: bool = false;
+		println!("{}", path.join(".igloo").display());
+		if path.join(".igloo").exists()
+		{
+			ret = true;
+		}
+		return ret;
+	}
+
 	pub fn new(inst: &Igloo, name_in: &str, target_in: &str)
 			   -> Result<IglooPrj, IglooErrType>
 	{

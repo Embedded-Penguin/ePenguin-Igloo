@@ -15,9 +15,41 @@ mod tests {
     }
 }
 
+pub struct IglooCliConfig
+{
+	pub cli_conf: clap::ArgMatches,
+	pub version_major: i8,
+	pub version_minor: i8,
+	pub version_patch: i8,
+	pub description: String,
+}
+
+impl IglooCliConfig
+{
+	pub fn new() -> Self
+	{
+		Self
+		{
+			cli_conf: igloo_app(),
+			version_major: env!("CARGO_PKG_VERSION_MAJOR")
+				.to_string()
+				.parse()
+				.unwrap(),
+			version_minor: env!("CARGO_PKG_VERSION_MINOR")
+				.to_string()
+				.parse()
+				.unwrap(),
+			version_patch: env!("CARGO_PKG_VERSION_PATCH")
+				.to_string()
+				.parse()
+				.unwrap(),
+			description: clap::crate_description!().to_string(),
+		}
+	}
+}
 
 /// runs the clap initializer to get command line arguments
-pub fn igloo_app() -> ArgMatches
+fn igloo_app() -> clap::ArgMatches
 {
 	let ret_app = App::new("igloo")
 		.about(clap::crate_description!())
@@ -59,6 +91,7 @@ pub fn igloo_app() -> ArgMatches
 									 .required(false)
 									 .about("List of supported boards for the current version"),)))
 		.get_matches();
+
 
 	ret_app
 }

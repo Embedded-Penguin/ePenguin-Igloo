@@ -2,6 +2,8 @@
 extern crate clap;
 extern crate config;
 
+/// Igloo Core
+
 mod igloo_action;
 mod igloo_project;
 mod igloo_target;
@@ -27,7 +29,7 @@ mod tests {
 /// things happen.
 pub struct Igloo
 {
-	cli_conf: clap::ArgMatches,
+	cli_conf: IglooCliConfig,
 	master_make_man: Config,
 	master_target_man: Config,
 }
@@ -40,13 +42,13 @@ impl Igloo
 	///
 	/// This function handles all cli input and stores it. It is parsed for errors in the
 	/// start function.
-	pub fn new() -> Igloo
+	pub fn new() -> Self
 	{
 		Igloo
 		{
 			master_make_man: Config::new(),
 			master_target_man: Config::new(),
-			cli_conf: igloo_app(),
+			cli_conf: IglooCliConfig::new(),
 		}
 	}
 
@@ -80,7 +82,7 @@ impl Igloo
 		}
 
 		// Assign our instance type (new, run, flash, etc..)
-		match igloo_subcommand(&self.cli_conf)
+		match igloo_subcommand(&self.cli_conf.cli_conf)
 		{
 			Ok(v) => res = v,
 			Err(e) => return Err(e),
@@ -101,6 +103,12 @@ impl Igloo
 	{
 		let mut res_err = ErrNone;
 		let mut prj: IglooPrj;
+		println!("Version Major: {0}\n\
+				  Version Minor: {1}\n\
+				  Version Patch: {2}",
+				 self.cli_conf.version_major,
+				 self.cli_conf.version_minor,
+				 self.cli_conf.version_patch);
 		loop { match inst_type
 		{
 			Null => res_err = ErrNone,
@@ -108,12 +116,14 @@ impl Igloo
 			{
 				let prj_name: &str = self
 					.cli_conf
+					.cli_conf
 					.subcommand()
 					.unwrap().1
 					.value_of("project_name")
 					.unwrap();
 
 				let target: &str = self
+					.cli_conf
 					.cli_conf
 					.subcommand()
 					.unwrap().1
@@ -136,7 +146,11 @@ impl Igloo
 			}
 			Info =>
 			{
-
+				// list current version
+				// list supported mcus
+				// if we're in a project, list the project info
+				// list targets/boards
+				println!("Info in run handler");
 			}
 			_ => println!("Unhandled case: {:?}", inst_type),
 		} break; }

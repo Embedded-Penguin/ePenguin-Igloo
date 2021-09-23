@@ -17,11 +17,13 @@ pub fn new(inst: &Igloo, prj_name: &str, target: &str)
 	// Check if we are already inside of an igloo project
 	// Creating an igloo project inside an igloo project
 	// is a no no
-	if std::path::Path::new(".igloo").exists()
+	if IglooPrj::is_igloo_prj(&std::env::current_dir().unwrap())
 	{
+		println!("Calling igloo new from igloo project...");
 		res_err = NewCalledInsideProject;
 		return res_err
 	}
+
 	// Check if the project folder already exists
 	// Don't want to accidentally overwrite anything
 	if std::path::Path::new(prj_name).exists()
