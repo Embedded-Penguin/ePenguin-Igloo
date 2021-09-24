@@ -3,7 +3,7 @@
 /// For now, all functionality is going to sit in this lib.rs until I figure out
 /// how I want to structure manifests
 extern crate config;
-
+extern crate sscanf;
 #[cfg(test)]
 mod tests {
     #[test]
@@ -31,20 +31,28 @@ pub mod IglooManifest
 		}
 
 		let mut target_make_name: String = String::default();
+		// Confirm the target.make table exists in the master target manifest
 		match master_tm.get_table("target.make")
 		{
 			Ok(v) =>
 			{
+				// Confirm the target exists in the target.make table
+				// What this actually means is make sure we can use the target name
+				// to acquire the target's name in the master make manifest
 				match v.get(name)
 				{
 					Some(v) =>
 					{
+						// Now we've confirmed the target has an entry in the target.make table
 						println!("target.make entry for \"{}\" exists!", v);
+						// store the target's full name for use in the master make manifest later
 						target_make_name = v.to_string();
-						println!("v.to_string() = {}", target_make_name);
 					}
 					None =>
 					{
+						// if we've gotten to this point and failed, it simply means the target doesn't have
+						// a full name set in the target.make table. We need this for accessing it's makefile parameters
+						// later, so we'll need to go add that now.
 						println!("target.make entry for \"{}\" does not exist", name);
 						ret = false;
 					}
@@ -87,6 +95,52 @@ pub mod IglooManifest
 			}
 		}
 
+		// Now confirm the target has an entry in the master make manifest
+		// strip the name for usable pieces of information
+		let (dummy, arch, family, mcu_name) = sscanf::scanf!(
+			target_make_name, "{}.{}.{}.{}", String, String, String, String).unwrap();
+		// verify an entry exists for the arch
+		match master_mm.get_table(&format!("{}.{}", dummy, arch))
+		{
+			Ok(_v) =>
+			{
+				println!("Make parameters found for arch");
+			}
+			Err(e) =>
+			{
+				println!("Make parameters not found: {}", e);
+				ret = false;
+			}
+		}
+
+		// verify an entry exists for the mcu family
+		// later this will be family, then series, then mcu
+		match master_mm.get_table(&format!("{}.{}.{}", dummy, arch, family))
+		{
+			Ok(_v) =>
+			{
+				println!("Make parameters found for mcu family");
+			}
+			Err(e) =>
+			{
+				println!("Make parameters not found: {}", e);
+				ret = false;
+			}
+		}
+
+		// finally, ver
+		match master_mm.get_table(&format!("{}.{}.{}.{}", dummy, arch, family, mcu_name))
+		{
+			Ok(_v) =>
+			{
+				println!("Make parameters found for mcu family");
+			}
+			Err(e) =>
+			{
+				println!("Make parameters not found: {}", e);
+				ret = false;
+			}
+		}
 
 		Ok(ret)
 	}

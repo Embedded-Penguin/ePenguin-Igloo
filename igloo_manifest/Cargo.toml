@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 igloo_base = { path = "../igloo_base" }
 config = "0.10"
+sscanf = "0.1.2"
