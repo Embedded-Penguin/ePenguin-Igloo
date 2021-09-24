@@ -1,5 +1,3 @@
-mod env_info;
-
 use std::path::PathBuf;
 use std::env;
 use directories::*;

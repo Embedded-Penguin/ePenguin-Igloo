@@ -15,9 +15,12 @@ mod tests {
     }
 }
 
+/// IglooCliConfig stores information about the igloo command being run.
+/// It is all handled in active memory because we only care about this
+/// information during the execution of that command.
 pub struct IglooCliConfig
 {
-	pub cli_conf: clap::ArgMatches,
+	pub raw: clap::ArgMatches,
 	pub version_major: i8,
 	pub version_minor: i8,
 	pub version_patch: i8,
@@ -30,7 +33,7 @@ impl IglooCliConfig
 	{
 		Self
 		{
-			cli_conf: igloo_app(),
+			raw: igloo_app(),
 			version_major: env!("CARGO_PKG_VERSION_MAJOR")
 				.to_string()
 				.parse()

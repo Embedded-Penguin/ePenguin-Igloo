@@ -9,8 +9,7 @@ edition = "2018"
 [dependencies]
 clap = "3.0.0-beta.2"
 config = "0.10"
+igloo_base = { path = "../igloo_base" }
 igloo_cli = { path = "../igloo_cli" }
 igloo_manifest = { path = "../igloo_manifest" }
-igloo_make = { path = "../igloo_make" }
-igloo_base = { path = "../igloo_base" }
 zmq = "0.9"

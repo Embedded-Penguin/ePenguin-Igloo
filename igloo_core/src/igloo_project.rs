@@ -33,6 +33,7 @@ impl IglooPrj
 		IglooPrj
 		{
 			name: String::from(""),
+			/// target_bank -- a vector of targets added for this project
 			target_bank: Vec::default(),
 			project_dir: std::path::PathBuf::default(),
 			root: PathBuf::default(),
@@ -67,7 +68,7 @@ impl IglooPrj
 			return Err(res_err)
 		}
 
-		match target_is_valid(&inst.master_make_man, &inst.master_target_man, target_in)
+		match IglooManifest::target_is_valid(&inst.master_make_man, &inst.master_target_man, target_in)
 		{
 			Ok(v) =>
 			{

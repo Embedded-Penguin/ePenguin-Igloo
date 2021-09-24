@@ -62,7 +62,7 @@ impl Igloo
 	{
 		let mut res: IglooInstType = Null;
 		// Load manifests first
-		match get_master_make_manifest(&mut self.master_make_man)
+		match IglooManifest::get_master_make_manifest(&mut self.master_make_man)
 		{
 			ErrNone => (),
 			v =>
@@ -71,7 +71,7 @@ impl Igloo
 				return Err(v)
 			}
 		}
-		match get_master_target_manifest(&mut self.master_target_man)
+		match IglooManifest::get_master_target_manifest(&mut self.master_target_man)
 		{
 			ErrNone => (),
 			v =>
@@ -82,7 +82,7 @@ impl Igloo
 		}
 
 		// Assign our instance type (new, run, flash, etc..)
-		match igloo_subcommand(&self.cli_conf.cli_conf)
+		match igloo_subcommand(&self.cli_conf.raw)
 		{
 			Ok(v) => res = v,
 			Err(e) => return Err(e),
@@ -103,12 +103,6 @@ impl Igloo
 	{
 		let mut res_err = ErrNone;
 		let mut prj: IglooPrj;
-		println!("Version Major: {0}\n\
-				  Version Minor: {1}\n\
-				  Version Patch: {2}",
-				 self.cli_conf.version_major,
-				 self.cli_conf.version_minor,
-				 self.cli_conf.version_patch);
 		loop { match inst_type
 		{
 			Null => res_err = ErrNone,
@@ -116,7 +110,7 @@ impl Igloo
 			{
 				let prj_name: &str = self
 					.cli_conf
-					.cli_conf
+					.raw
 					.subcommand()
 					.unwrap().1
 					.value_of("project_name")
@@ -124,7 +118,7 @@ impl Igloo
 
 				let target: &str = self
 					.cli_conf
-					.cli_conf
+					.raw
 					.subcommand()
 					.unwrap().1
 					.value_of("target")
@@ -147,7 +141,13 @@ impl Igloo
 			Info =>
 			{
 				// list current version
+				println!("Igloo Version: {0}.{1}.{2}\n",
+						 self.cli_conf.version_major,
+						 self.cli_conf.version_minor,
+						 self.cli_conf.version_patch);
+				// list esf version
 				// list supported mcus
+
 				// if we're in a project, list the project info
 				// list targets/boards
 				println!("Info in run handler");

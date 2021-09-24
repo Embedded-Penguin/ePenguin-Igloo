@@ -14,8 +14,7 @@ igloo_core = { path = "./igloo_core" }
 igloo_cli = { path = "./igloo_cli" }
 igloo_agent = { path = "./igloo_agent" }
 igloo_manifest = { path = "./igloo_manifest" }
-igloo_make = { path = "./igloo_make" }
 
 
 [workspace]
-members = ["igloo_base", "igloo_core", "igloo_cli", "igloo_agent", "igloo_manifest", "igloo_make"]
+members = ["igloo_base", "igloo_core", "igloo_cli", "igloo_agent", "igloo_manifest"]

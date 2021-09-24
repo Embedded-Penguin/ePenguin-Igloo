@@ -161,7 +161,6 @@ dependencies = [
  "igloo_agent",
  "igloo_cli",
  "igloo_core",
- "igloo_make",
  "igloo_manifest",
 ]
 
@@ -193,16 +192,8 @@ dependencies = [
  "config",
  "igloo_base",
  "igloo_cli",
- "igloo_make",
  "igloo_manifest",
  "zmq",
-]
-
-[[package]]
-name = "igloo_make"
-version = "0.1.0"
-dependencies = [
- "igloo_base",
 ]
 
 [[package]]
