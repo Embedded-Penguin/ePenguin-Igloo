@@ -57,63 +57,71 @@ impl IglooPrj
 			   -> Result<IglooPrj, IglooErrType>
 	{
 		let mut res_err = ErrNone;
-		if String::from(name_in).is_empty()
-		{
-			res_err = InvalidProjectName;
-			return Err(res_err)
-		}
-
-		if res_err != ErrNone
-		{
-			return Err(res_err)
-		}
-
-		match IglooManifest::target_is_valid(&inst.master_make_man, &inst.master_target_man, target_in)
-		{
-			Ok(v) =>
+		let mut targetbank: Vec<IglooTarget> = Vec::new();
+		loop
+		{{
+			if String::from(name_in).is_empty()
 			{
-				if v
+				res_err = InvalidProjectName;
+				break;
+			}
+
+			match IglooManifest::target_is_valid(
+				&inst.master_make_man,
+				&inst.master_target_man,
+				target_in)
+			{
+				Ok(v) =>
 				{
-					println!("Verified target exists {}", name_in);
+					if v
+					{
+						println!("Verified target exists {}", name_in);
+					}
+					else
+					{
+						println!("Couldn't verify target exists {}", name_in);
+						return Err(InvalidTarget)
+					}
 				}
-				else
+				Err(e) =>
 				{
-					println!("Couldn't verify target exists {}", name_in);
-					return Err(InvalidTarget)
+					res_err = e;
+					break;
 				}
 			}
-			Err(e) =>
-			{
-				return Err(e)
-			}
+
+			let mut _targ_make_table_name = inst.master_target_man.get_str(
+				&("target.make.".to_owned() + &target_in)).unwrap();
+			let mut _targ_manifest_file_name = inst.master_target_man.get_str(
+				&("target.manifest.".to_owned() + &target_in)).unwrap();
+
+			let targ = IglooTarget::from(
+				IglooEnvInfo::get_env_info().cwd
+					.join(name_in)
+					.join(".igloo")
+					.join("target")
+					.join(target_in),
+				inst,
+				String::from(target_in),
+				&_targ_make_table_name,
+				&_targ_manifest_file_name).unwrap();
+
+			targetbank.push(targ);
+
+		}}
+
+		if(res_err != ErrNone)
+		{
+			return Err(res_err)
 		}
-
-		let mut _targ_make_table_name = inst.master_target_man.get_str(
-			&("target.make.".to_owned() + &target_in)).unwrap();
-		let mut _targ_manifest_file_name = inst.master_target_man.get_str(
-			&("target.manifest.".to_owned() + &target_in)).unwrap();
-
-		let mut temp: Vec<IglooTarget> = Vec::new();
-		let targ = IglooTarget::from(
-			IglooEnvInfo::get_env_info().cwd
-				.join(name_in)
-				.join(".igloo")
-				.join("target")
-				.join(target_in),
-			inst,
-			String::from(target_in),
-			&_targ_make_table_name,
-			&_targ_manifest_file_name).unwrap();
-
-		temp.push(targ);
 
 		Ok(IglooPrj
 		{
-			name: String::from(name_in),
-			target_bank: temp,
-			project_dir: IglooEnvInfo::get_env_info().cwd.join(name_in),
-			root: PathBuf::from(
-				IglooEnvInfo::get_env_info().cwd.join(name_in)),
+			   name: String::from(name_in),
+			   target_bank: targetbank,
+			   project_dir: IglooEnvInfo::get_env_info().cwd.join(name_in),
+			   root: PathBuf::from(
+				   IglooEnvInfo::get_env_info().cwd.join(name_in)),
 		})
 	}
 

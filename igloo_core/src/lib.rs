@@ -115,7 +115,6 @@ impl Igloo
 					.unwrap().1
 					.value_of("project_name")
 					.unwrap();
-
 				let target: &str = self
 					.cli_conf
 					.raw
@@ -130,9 +129,12 @@ impl Igloo
 					return Err(res_err)
 				}
 			}
-			Flash =>
+			Push =>
 			{
+				if IglooPrj::is_igloo_prj(&std::env::current_dir().unwrap())
+				{
 
+				}
 			}
 			Run =>
 			{
@@ -151,6 +153,34 @@ impl Igloo
 				// if we're in a project, list the project info
 				// list targets/boards
 				println!("Info in run handler");
+			}
+			Target =>
+			{
+				let tar_sub = self.cli_conf.raw.subcommand().unwrap();
+				match &tar_sub.1.subcommand_name()
+				{
+					Some("add") =>
+					{
+						println!("Attempting to add target \"{0}\"",
+								 tar_sub.1
+								 .subcommand()
+								 .unwrap().1
+								 .value_of("target_name")
+								 .unwrap());
+
+					}
+					Some("remove") =>
+					{
+						println!("Attempting to remove target \"{0}\"",
+								 tar_sub.1
+								 .subcommand()
+								 .unwrap().1
+								 .value_of("target_name")
+								 .unwrap());
+					}
+					None => unreachable!(),
+					_ => unreachable!(),
+				}
 			}
 			_ => println!("Unhandled case: {:?}", inst_type),
 		} break; }

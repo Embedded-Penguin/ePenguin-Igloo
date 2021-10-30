@@ -18,12 +18,14 @@ pub enum IglooInstType
 	Null = -1,
 	New = 0,
 	Run = 1,
-	Flash = 2,
-	Debug = 3,
-	Clean = 4,
-	Erase = 5,
-	GenDoc = 6,
-	Info = 7,
+	Push = 2,
+	Pull = 3,
+	Debug = 4,
+	Clean = 5,
+	Erase = 6,
+	GenDoc = 7,
+	Info = 8,
+	Target = 9,
 }
 
 #[derive(Debug)]
@@ -55,6 +57,7 @@ pub enum IglooErrType
 	/// inside a project without also generating a scripts directory.
 	/// The likely culprit of this failure is a user has messed with the folder
 	FailedToFindTargetScriptsDir = 12,
+	ActionCalledOutsideProject = 13,
 }
 
 

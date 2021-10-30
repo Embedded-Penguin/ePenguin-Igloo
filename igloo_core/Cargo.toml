@@ -13,4 +13,3 @@ igloo_base = { path = "../igloo_base" }
 igloo_cli = { path = "../igloo_cli" }
 igloo_manifest = { path = "../igloo_manifest" }
 sscanf = "0.1.2"
-zmq = "0.9"

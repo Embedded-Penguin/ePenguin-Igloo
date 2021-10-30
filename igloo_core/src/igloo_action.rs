@@ -51,3 +51,21 @@ pub fn new(inst: &Igloo, prj_name: &str, target: &str)
 	}
 	res_err
 }
+
+pub fn add_target(inst: &Igloo, prj_name: &str, target: &str) -> IglooErrType
+{
+	let mut res_err: IglooErrType = ErrNone;
+
+	loop {{
+		// Verify that we are inside of an igloo project
+		if !IglooPrj::is_igloo_prj(&std::env::current_dir().unwrap())
+		{
+			res_err = ActionCalledOutsideProject;
+			break;
+		}
+	}break;}
+
+
+
+	return res_err
+}
