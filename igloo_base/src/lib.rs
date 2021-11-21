@@ -30,6 +30,16 @@ pub enum IglooInstType
 
 #[derive(Debug)]
 #[derive(PartialEq)]
+pub enum IglooDebugSeverity
+{
+	CRITICAL = 0,
+	WARNING = 1,
+	INFO = 2,
+	TRACE = 3,
+}
+
+#[derive(Debug)]
+#[derive(PartialEq)]
 /// Igloo Error Type
 pub enum IglooErrType
 {
@@ -110,3 +120,9 @@ impl IglooEnvInfo
 		}
 	}
 }
+
+// trait IglooUtil
+// {
+// 	/// Better debugging
+	
+// }
