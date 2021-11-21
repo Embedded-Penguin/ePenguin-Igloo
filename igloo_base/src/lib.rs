@@ -10,6 +10,12 @@ mod tests {
     }
 }
 
+// #[macro_export]
+// macro_rules! igloo_println
+// {
+
+// }
+
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -120,9 +126,3 @@ impl IglooEnvInfo
 		}
 	}
 }
-
-// trait IglooUtil
-// {
-// 	/// Better debugging
-	
-// }
