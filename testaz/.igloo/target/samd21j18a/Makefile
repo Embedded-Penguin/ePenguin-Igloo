@@ -1,5 +1,5 @@
 # ePenguin Generated Variables
-PROJECT_NAME=sampleprj
+PROJECT_NAME=testaz
 TARGET_NAME=samd21j18a
 TOOLCHAIN=${ESF_DIR}/toolchains/arm-none-eabi-toolchain/bin/arm-none-eabi
 CC=${TOOLCHAIN}-gcc

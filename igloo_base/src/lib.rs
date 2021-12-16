@@ -10,6 +10,12 @@ mod tests {
     }
 }
 
+// #[macro_export]
+// macro_rules! igloo_println
+// {
+
+// }
+
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -26,6 +32,16 @@ pub enum IglooInstType
 	GenDoc = 7,
 	Info = 8,
 	Target = 9,
+}
+
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub enum IglooDebugSeverity
+{
+	CRITICAL = 0,
+	WARNING = 1,
+	INFO = 2,
+	TRACE = 3,
 }
 
 #[derive(Debug)]

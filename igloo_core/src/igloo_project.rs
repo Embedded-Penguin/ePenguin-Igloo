@@ -112,7 +112,7 @@ impl IglooPrj
 
 			targetbank.push(targ);
 
-		}}
+		} break;}
 
 		if(res_err != ErrNone)
 		{
