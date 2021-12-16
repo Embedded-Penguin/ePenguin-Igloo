@@ -44,11 +44,15 @@ impl IglooPrj
 	/// this tests if the requested directory is an igloo project
 	pub fn is_igloo_prj(path: &std::path::PathBuf) -> bool
 	{
-		let mut ret: bool = false;
-		println!("{}", path.join(".igloo").display());
-		if path.join(".igloo").exists()
+		let mut ret: bool = true;
+		if !path.join(".igloo").exists()
 		{
-			ret = true;
+			return false;
+		}
+
+		if !path.join(".igloo").join("project.toml").exists()
+		{
+			return false;
 		}
 		return ret;
 	}
@@ -219,6 +223,12 @@ impl IglooPrj
 		}
 	}
 
+	/// Generates project config file -- project.toml
+	pub fn gen_project_config(&self) -> IglooErrType
+	{
+		IglooErrType::ErrUnknown
+
+	}
 	/// Generates the target directories for all targets
 	pub fn gen_targets(&self) -> IglooErrType
 	{

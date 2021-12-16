@@ -63,6 +63,7 @@ pub fn add_target(inst: &Igloo, prj_name: &str, target: &str) -> IglooErrType
 			res_err = ActionCalledOutsideProject;
 			break;
 		}
+
 	}break;}
 
 
