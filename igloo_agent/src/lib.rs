@@ -3,7 +3,9 @@ use std::process::{Command, Stdio};
 use std::sync::mpsc::{channel, Sender};
 use std::thread;
 
-fn openocd_thread(sender: &Sender<String>, child: std::process::Child)
+use igloo_base::*;
+use igloo_core::igloo_target;
+fn openocd_thread(sender: Sender<String>, child: std::process::Child)
 {
 	let mut f = BufReader::new(child.stdout.unwrap());
 	loop
@@ -43,7 +45,7 @@ fn gdb_thread(sender: &Sender<String>, child: std::process::Child)
 	}
 }
 
-fn start_openocd_listener(sender: &Sender<String>, board_cfg_file: &str)
+fn start_openocd_listener(sender: Sender<String>, board_cfg_file: &str)
 {
 	let child = Command::new("openocd")
 		.args(["-f", board_cfg_file])
@@ -56,7 +58,7 @@ fn start_openocd_listener(sender: &Sender<String>, board_cfg_file: &str)
 	thread::spawn(move || openocd_thread(sender, child));
 }
 
-fn ia_push(target: &IglooTarget) -> Result<
+fn ia_push(target: &igloo_target::IglooTarget) -> Result<String, igloo_base::IglooErrType>
 {
-
+	Ok(String::from("working"))
 }

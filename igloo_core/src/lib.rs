@@ -6,7 +6,7 @@ extern crate config;
 
 mod igloo_action;
 mod igloo_project;
-mod igloo_target;
+pub mod igloo_target;
 
 use igloo_base::*;
 use igloo_base::IglooInstType::*;
