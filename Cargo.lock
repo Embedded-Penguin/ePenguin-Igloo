@@ -181,6 +181,10 @@ dependencies = [
 [[package]]
 name = "igloo_agent"
 version = "0.1.0"
+dependencies = [
+ "igloo_base",
+ "igloo_core",
+]
 
 [[package]]
 name = "igloo_base"
