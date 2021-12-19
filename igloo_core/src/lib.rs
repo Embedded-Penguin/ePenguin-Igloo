@@ -30,7 +30,6 @@ mod tests {
 pub struct Igloo
 {
 	cli_conf: IglooCliConfig,
-	master_make_man: Config,
 	master_target_man: Config,
 }
 
@@ -46,7 +45,6 @@ impl Igloo
 	{
 		Igloo
 		{
-			master_make_man: Config::new(),
 			master_target_man: Config::new(),
 			cli_conf: IglooCliConfig::new(),
 		}
@@ -61,16 +59,6 @@ impl Igloo
 	pub fn start(&mut self) -> Result<IglooInstType, IglooErrType>
 	{
 		let mut res: IglooInstType = Null;
-		// Load manifests first
-		match IglooManifest::get_master_make_manifest(&mut self.master_make_man)
-		{
-			ErrNone => (),
-			v =>
-			{
-				println!("{:?}", v);
-				return Err(v)
-			}
-		}
 		match IglooManifest::get_master_target_manifest(&mut self.master_target_man)
 		{
 			ErrNone => (),
@@ -131,10 +119,7 @@ impl Igloo
 			}
 			Push =>
 			{
-				if IglooPrj::is_igloo_prj(&std::env::current_dir().unwrap())
-				{
 
-				}
 			}
 			Run =>
 			{
@@ -156,31 +141,6 @@ impl Igloo
 			}
 			Target =>
 			{
-				let tar_sub = self.cli_conf.raw.subcommand().unwrap();
-				match &tar_sub.1.subcommand_name()
-				{
-					Some("add") =>
-					{
-						println!("Attempting to add target \"{0}\"",
-								 tar_sub.1
-								 .subcommand()
-								 .unwrap().1
-								 .value_of("target_name")
-								 .unwrap());
-
-					}
-					Some("remove") =>
-					{
-						println!("Attempting to remove target \"{0}\"",
-								 tar_sub.1
-								 .subcommand()
-								 .unwrap().1
-								 .value_of("target_name")
-								 .unwrap());
-					}
-					None => unreachable!(),
-					_ => unreachable!(),
-				}
 			}
 			_ => println!("Unhandled case: {:?}", inst_type),
 		} break; }

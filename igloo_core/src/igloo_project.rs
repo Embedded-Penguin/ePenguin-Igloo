@@ -1,6 +1,7 @@
 use igloo_base::*;
 use igloo_base::IglooErrType::*;
 use igloo_manifest::*;
+use config::Config;
 
 use crate::Igloo;
 use crate::igloo_target::IglooTarget;
@@ -9,6 +10,7 @@ use std::fs::File;
 use std::vec::Vec;
 use std::io::prelude::*;
 use std::path::PathBuf;
+use std::collections::HashMap;
 // New Project
 // --- Verify location
 // --- Populate base folders
@@ -111,6 +113,7 @@ impl IglooPrj
 				&_targ_manifest_file_name).unwrap();
 
 			targetbank.push(targ);
+			println!("{:?}", targ);
 
 		} break;}
 
@@ -127,6 +130,23 @@ impl IglooPrj
 			   root: PathBuf::from(
 				   IglooEnvInfo::get_env_info().cwd.join(name_in)),
 		})
+	}
+
+	/// takes the cwd and turns the .igloo/ and .igloo.toml into the project
+	/// in memory
+	pub fn from_here() -> Result<IglooPrj, IglooErrType>
+	{
+		let mut res = IglooErrType::ErrNone;
+
+		// get project name and target(s)
+		let mut prj_file = config::Config::default();
+		prj_file.merge(config::File::with_name(".igloo")).unwrap();
+		let mut prj_name = prj_file.deserialize::<HashMap<String, String>>().unwrap();
+		println!("This projects name is {:?}", prj_name);
+
+
+		Err(IglooErrType::ErrUnknown)
+
 	}
 
 	pub fn populate(&self) -> IglooErrType

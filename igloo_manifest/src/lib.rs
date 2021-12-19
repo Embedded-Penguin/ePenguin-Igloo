@@ -21,7 +21,7 @@ pub mod IglooManifest
 	/// master_mm -- Master Make Manifest
 	/// master_tm -- Master Target Manifest
 	/// name -- name of target
-	pub fn target_is_valid(master_mm: &Config, master_tm: &Config, name: &str)
+	pub fn target_is_valid(master_tm: &Config, name: &str)
 						   -> Result<bool, IglooErrType>
 	{
 		let mut ret: bool = true;
@@ -30,7 +30,7 @@ pub mod IglooManifest
 			return Err(InvalidTarget)
 		}
 
-		let mut target_make_name: String = String::default();
+		let mut target_man_path: String = String::default();
 		// Confirm the target.make table exists in the master target manifest
 		match master_tm.get_table("target.make")
 		{
@@ -46,7 +46,7 @@ pub mod IglooManifest
 						// Now we've confirmed the target has an entry in the target.make table
 						println!("target.make entry for \"{}\" exists!", v);
 						// store the target's full name for use in the master make manifest later
-						target_make_name = v.to_string();
+						target_man_path = v.to_string();
 					}
 					None =>
 					{
@@ -94,54 +94,6 @@ pub mod IglooManifest
 				return Err(FailedToLoadMasterTargetManifest)
 			}
 		}
-
-		// Now confirm the target has an entry in the master make manifest
-		// strip the name for usable pieces of information
-		let (dummy, arch, family, mcu_name) = sscanf::scanf!(
-			target_make_name, "{}.{}.{}.{}", String, String, String, String).unwrap();
-		// verify an entry exists for the arch
-		match master_mm.get_table(&format!("{}.{}", dummy, arch))
-		{
-			Ok(_v) =>
-			{
-				println!("Make parameters found for arch");
-			}
-			Err(e) =>
-			{
-				println!("Make parameters not found: {}", e);
-				ret = false;
-			}
-		}
-
-		// verify an entry exists for the mcu family
-		// later this will be family, then series, then mcu
-		match master_mm.get_table(&format!("{}.{}.{}", dummy, arch, family))
-		{
-			Ok(_v) =>
-			{
-				println!("Make parameters found for mcu family");
-			}
-			Err(e) =>
-			{
-				println!("Make parameters not found: {}", e);
-				ret = false;
-			}
-		}
-
-		// finally, ver
-		match master_mm.get_table(&format!("{}.{}.{}.{}", dummy, arch, family, mcu_name))
-		{
-			Ok(_v) =>
-			{
-				println!("Make parameters found for mcu family");
-			}
-			Err(e) =>
-			{
-				println!("Make parameters not found: {}", e);
-				ret = false;
-			}
-		}
-
 		Ok(ret)
 	}
 

@@ -45,7 +45,7 @@ fn gdb_thread(sender: &Sender<String>, child: std::process::Child)
 	}
 }
 
-fn start_openocd_listener(sender: Sender<String>, board_cfg_file: &str)
+fn start_openocd_listener(sender: Sender<String>, target: &igloo_target::IglooTarget)
 {
 	let child = Command::new("openocd")
 		.args(["-f", board_cfg_file])
@@ -60,5 +60,9 @@ fn start_openocd_listener(sender: Sender<String>, board_cfg_file: &str)
 
 fn ia_push(target: &igloo_target::IglooTarget) -> Result<String, igloo_base::IglooErrType>
 {
+	let (oo_tx, oo_rx) = channel();
+	start_openocd_listener(oo_tx, target);
+	let (gdb_tx, gdb_rx) = channel();
+
 	Ok(String::from("working"))
 }
