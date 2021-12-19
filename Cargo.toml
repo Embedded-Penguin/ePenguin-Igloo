@@ -5,16 +5,19 @@ authors = ["Penguin <...>"]
 edition = "2018"
 repository = "https://github.com/Embedded-Penguin/ePenguin-igloo/"
 readme = "README.md"
-description = "Igloo is a package and project manager. It is used for bare metal (for now only bare metal) embedded systems. In the embedded world, there is a big gap between how one would write code for embedded systems between manufacturers. As of today, 7/2/20, there is really no easy way to go about writing code for any embedded system from scratch. Most of the time, you need to download headers from some unknown location, figure out your hardware interface, find the proper toolchain, etc. This forces embedded developers and engineers to spend a lot of unnecessary time on DevOps and less time on firmware engineering. Igloo aims to solve this problem. Igloo is in its early stages of development."
-license="GPL-3.0+"
+description = "
+Igloo is a package/project manager. It is used for bare metal embedded systems. It is in its early stages of development. The goal of this project is to reduce the pain of writing embedded code by bridging the gap between many different manufacturers. It is can be thought of as glue for many of the fragmented pieces in the embedded world.
+
+This is also a learning project for me. Not all of this code will be the most efficient. I wanted to use a problem I saw as an opportunity to learn rust. Advice is welcome.
+"
+license="GPL-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 igloo_core = { path = "./igloo_core" }
 igloo_cli = { path = "./igloo_cli" }
 igloo_agent = { path = "./igloo_agent" }
-igloo_manifest = { path = "./igloo_manifest" }
 
 
 [workspace]
-members = ["igloo_base", "igloo_core", "igloo_cli", "igloo_agent", "igloo_manifest"]
+members = ["igloo_core", "igloo_cli", "igloo_agent"]

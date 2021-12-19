@@ -1,24 +1,10 @@
-extern crate clap;
-extern crate config;
-
-use igloo_base::*;
-use igloo_base::IglooInstType::*;
-use igloo_base::IglooErrType::*;
-
 use clap::{App, Arg, ArgMatches};
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+use IglooType::*;
+use IglooStatus::*;
 
-/// IglooCliConfig stores information about the igloo command being run.
-/// It is all handled in active memory because we only care about this
-/// information during the execution of that command.
-pub struct IglooCliConfig
+/// Information input via cli will be stored here for the lifetime of the process
+pub struct IglooCliInfo
 {
 	pub raw: clap::ArgMatches,
 	pub version_major: i8,
@@ -27,7 +13,7 @@ pub struct IglooCliConfig
 	pub description: String,
 }
 
-impl IglooCliConfig
+impl IglooCliInfo
 {
 	pub fn new() -> Self
 	{
@@ -52,7 +38,7 @@ impl IglooCliConfig
 }
 
 /// runs the clap initializer to get command line arguments
-fn igloo_app() -> clap::ArgMatches
+fn igloo_run_cli() -> clap::ArgMatches
 {
 	let ret_app = App::new("igloo")
 		.about(clap::crate_description!())
@@ -111,46 +97,53 @@ fn igloo_app() -> clap::ArgMatches
 									 .required(false)
 									 .about("List of supported boards for the current version"),)))
 		.get_matches();
-
-
 	ret_app
 }
 
-
-pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooInstType, IglooErrType>
+pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooType, IglooStatus>
 {
-	let mut _res_type: IglooInstType = Null;
+	let mut _res_type: IglooType = Null;
 	match args.subcommand_name()
 	{
 		Some("new") =>
 		{
 			println!("Igloo new was called!");
-			_res_type = New;
+			_res_type = IT_NEW;
 		}
 		Some("run") =>
 		{
 			println!("Igloo run was called!");
-			_res_type = Run;
+			_res_type = IT_RUN;
+		}
+		Some("build") =>
+		{
+			println!("Igloo build was called!");
+			_res_type = IT_BUILD;
 		}
 		Some("push") =>
 		{
 			println!("Igloo flash was called!");
-			_res_type = Push;
+			_res_type = IT_PUSH;
+		}
+		Some("pull") =>
+		{
+			println!("Igloo pull was called!");
+			_res_type = IT_PULL;
 		}
 		Some("erase") =>
 		{
 			println!("Igloo erase was called!");
-			_res_type = Erase;
+			_res_type = IT_ERASE;
 		}
 		Some("info") =>
 		{
 			println!("Igloo info was called!");
-			_res_type = Info;
+			_res_type = IT_INFO;
 		}
 		Some("target") =>
 		{
 			println!("Igloo target was called");
-			_res_type = Target;
+			_res_type = IT_TARGET;
 		}
 		None => unreachable!(),
 		_ => unreachable!(),
