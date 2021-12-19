@@ -1,5 +1,6 @@
 use clap::{App, Arg, ArgMatches};
 
+use crate::Igloo;
 use crate::IglooType;
 use crate::IglooType::*;
 use crate::IglooStatus;
@@ -100,4 +101,29 @@ fn igloo_run_cli() -> clap::ArgMatches
 									 .about("List of supported boards for the current version"),)))
 		.get_matches();
 	ret_app
+}
+
+/// Igloo CLI Helper functions
+/// These functions take some raw cli input and give us some helpful values
+/// Putting these here so I don't have to pollute other code with this
+pub fn ich_new_get_project_name(igloo: &Igloo) -> String
+{
+	return String::from(igloo
+						.cli_info
+						.raw
+						.subcommand()
+						.unwrap().1
+						.value_of("project_name")
+						.unwrap())
+}
+
+pub fn ich_new_get_target_name(igloo: &Igloo) -> String
+{
+	return String::from(igloo
+						.cli_info
+						.raw
+						.subcommand()
+						.unwrap().1
+						.value_of("target")
+						.unwrap())
 }
