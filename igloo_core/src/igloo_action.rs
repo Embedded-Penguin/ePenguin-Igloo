@@ -1,0 +1,63 @@
+use clap::ArgMatches;
+
+use crate::IglooType;
+use crate::IglooType::*;
+use crate::IglooStatus;
+use crate::IglooStatus::*;
+
+pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooType, IglooStatus>
+{
+	let mut _res_type: IglooType = IT_NULL;
+	match args.subcommand_name()
+	{
+		Some("new") =>
+		{
+			println!("Igloo new was called!");
+			_res_type = IT_NEW;
+		}
+		Some("run") =>
+		{
+			println!("Igloo run was called!");
+			_res_type = IT_RUN;
+		}
+		Some("build") =>
+		{
+			println!("Igloo build was called!");
+			_res_type = IT_BUILD;
+		}
+		Some("push") =>
+		{
+			println!("Igloo flash was called!");
+			_res_type = IT_PUSH;
+		}
+		Some("pull") =>
+		{
+			println!("Igloo pull was called!");
+			_res_type = IT_PULL;
+		}
+		Some("erase") =>
+		{
+			println!("Igloo erase was called!");
+			_res_type = IT_ERASE;
+		}
+		Some("info") =>
+		{
+			println!("Igloo info was called!");
+			_res_type = IT_INFO;
+		}
+		Some("target") =>
+		{
+			println!("Igloo target was called");
+			_res_type = IT_TARGET;
+		}
+		None => unreachable!(),
+		_ => unreachable!(),
+	}
+
+	if _res_type == IT_NULL
+	{
+		return Err(IS_UNKNOWN)
+	}
+
+	Ok(_res_type)
+}

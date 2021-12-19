@@ -1,7 +1,9 @@
 use clap::{App, Arg, ArgMatches};
 
-use IglooType::*;
-use IglooStatus::*;
+use crate::IglooType;
+use crate::IglooType::*;
+use crate::IglooStatus;
+use crate::IglooStatus::*;
 
 /// Information input via cli will be stored here for the lifetime of the process
 pub struct IglooCliInfo
@@ -19,7 +21,7 @@ impl IglooCliInfo
 	{
 		Self
 		{
-			raw: igloo_app(),
+			raw: igloo_run_cli(),
 			version_major: env!("CARGO_PKG_VERSION_MAJOR")
 				.to_string()
 				.parse()
@@ -98,61 +100,4 @@ fn igloo_run_cli() -> clap::ArgMatches
 									 .about("List of supported boards for the current version"),)))
 		.get_matches();
 	ret_app
-}
-
-pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooType, IglooStatus>
-{
-	let mut _res_type: IglooType = Null;
-	match args.subcommand_name()
-	{
-		Some("new") =>
-		{
-			println!("Igloo new was called!");
-			_res_type = IT_NEW;
-		}
-		Some("run") =>
-		{
-			println!("Igloo run was called!");
-			_res_type = IT_RUN;
-		}
-		Some("build") =>
-		{
-			println!("Igloo build was called!");
-			_res_type = IT_BUILD;
-		}
-		Some("push") =>
-		{
-			println!("Igloo flash was called!");
-			_res_type = IT_PUSH;
-		}
-		Some("pull") =>
-		{
-			println!("Igloo pull was called!");
-			_res_type = IT_PULL;
-		}
-		Some("erase") =>
-		{
-			println!("Igloo erase was called!");
-			_res_type = IT_ERASE;
-		}
-		Some("info") =>
-		{
-			println!("Igloo info was called!");
-			_res_type = IT_INFO;
-		}
-		Some("target") =>
-		{
-			println!("Igloo target was called");
-			_res_type = IT_TARGET;
-		}
-		None => unreachable!(),
-		_ => unreachable!(),
-	}
-
-	if _res_type == Null
-	{
-		return Err(ErrUnknown)
-	}
-
-	Ok(_res_type)
 }
