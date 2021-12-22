@@ -12,62 +12,48 @@ use crate::IglooType::*;
 
 use crate::igloo_target::IglooTarget;
 
-/// Igloo Manifest Helper functions
-/// USES: environment variables (home dir, esf dir, current dir)
-/// DOES: brings target manifest into memory
-pub fn imh_get_master_target_manifest(inst: &mut Igloo) -> IglooStatus
-{
-	let mut ret: IglooStatus = IS_GOOD;
+use serde::{Serialize, Deserialize};
+use config::Config;
 
-	match inst.master_target_manifest.merge(
-		config::File::with_name(
-			inst.env.esfd.join("manifest/target-manifest.toml").to_str.unwrap()))
-	{
-		Ok(_v) => (),
-		Err(e) =>
-		{
-			println!("Error: {:?}", e);
-			ret = IS_FAILED_TO_LOAD_MTM;
-		}
-	}
-	ret
+#[derive(Serialize, Deserialize, Debug)]
+pub struct IglooProjectManifest
+{
+	name: String,
+	targets: Vec::<String>
 }
 
-pub fn imh_get_project_name(inst: &Igloo) -> String
+impl IglooProjectManifest
 {
-	let project_config: config::Config = config::Config::new();
-	match project_config.merge(
-		config::File::with_name(
-			inst.env.cwd.clone().join("igloo.toml").to_str().unwrap()))
+	pub fn default() -> IglooProjectManifest
 	{
-		Ok(v) =>
+		IglooProjectManifest
 		{
-			return v.deserialize::<HashMap<String, String>>().unwrap()["Project"]
+			name: String::from(""),
+			targets: Vec::default(),
+
 		}
-		Err(e) => panic!(),
+	}
+	pub fn from_project_file(self, igloo: &Igloo) -> Result<IglooProjectManifest, IglooStatus>
+	{
+		let mut config = config::Config::default();
+		config.merge(
+			config::File::with_name(
+				igloo.env
+					.cwd
+					.clone()
+					.join("igloo.toml")
+					.to_str().unwrap())).unwrap();
+
+		let z = config.deserialize::<IglooProjectManifest>().unwrap();
+		println!("{:?}", z);
+
+		Ok(IglooProjectManifest::default())
+	}
+
+	pub fn to_project_file(self, igloo: &Igloo) -> IglooStatus
+	{
+		IglooStatus::IS_GOOD
 	}
 }
 
-pub fn imh_get_targets(inst: &Igloo) -> Vec<IglooTarget>
-{
-	let project_config: config::Config = config::Config::new();
-	match project_config.merge(
-		config::File::with_name(
-			inst.env.cwd.clone().join("igloo.toml").to_str().unwrap()))
-	{
-		Ok(v) =>
-		{
-			match v.get("Targets")
-			{
-				Some(v2) =>
-				{
-					for target in 
-					{
 
-					}
-				}
-				None => panic!(),
-			}
-		}
-	}
-}

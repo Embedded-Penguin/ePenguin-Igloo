@@ -1,6 +1,6 @@
-#[derive(Debug)]
-#[derive(PartialEq)]
-#[derive(Clone)]
+use crate::{PathBuf, env, UserDirs};
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct IglooEnv
 {
 	// Current Working Directory
@@ -13,32 +13,39 @@ pub struct IglooEnv
 
 impl IglooEnv
 {
-	pub fn get_env() -> IglooEnvInfo
+	pub fn get_env() -> IglooEnv
 	{
-		cwd: env::current_dir().unwrap(),
-		hd: match UserDirs::new()
+		IglooEnv
 		{
-			Some(v) => v.home_dir().to_owned(),
-			None =>
+			cwd: match env::current_dir()
 			{
-				println!("Error: Failed to get home directory.\n\
-						  This should never happen. Exiting...");
-				std::process::exit(1);
-			}
-		},
-		esfd: match std::env::var("ESF_DIR")
-		{
-			Ok(v)
+				Ok(v) => v,
+				Err(e) => panic!(),
+			},
+			hd: match UserDirs::new()
 			{
-				std::path::PathBuf::from(&v.to_owned())
-			}
-			Err(e) =>
+				Some(v) => v.home_dir().to_owned(),
+				None =>
+				{
+					println!("Error: Failed to get home directory.\n\
+							  This should never happen. Exiting...");
+					std::process::exit(1);
+				}
+			},
+			esfd: match std::env::var("ESF_DIR")
 			{
-				// Note : Need to change new to return actual errors
-				// instead of exiting early
-				println!("Error: $ESF_DIR not defined as an environment\
-						  variable -- {:?}", e);
-				std::process::exit(1);
+				Ok(v) =>
+				{
+					std::path::PathBuf::from(&v.to_owned())
+				}
+				Err(e) =>
+				{
+					// Note : Need to change new to return actual errors
+					// instead of exiting early
+					println!("Error: $ESF_DIR not defined as an environment\
+							  variable -- {:?}", e);
+					std::process::exit(1);
+				}
 			}
 		}
 	}

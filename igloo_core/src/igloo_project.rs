@@ -18,6 +18,16 @@ pub struct IglooProject<'a>
 
 impl<'a> IglooProject<'a>
 {
+	pub fn default(igloo_in: &'a Igloo) -> IglooProject
+	{
+		IglooProject
+		{
+			igloo: igloo_in,
+			name: String::new(),
+			targets: Vec::default(),
+
+		}
+	}
 	/// Used to populate an IglooProject from scratch
 	/// This means we do not yet have any project in storage
 	/// and we must generate those directories, files, and symlinks
@@ -41,10 +51,8 @@ impl<'a> IglooProject<'a>
 	/// igloo run, push, pull, erase, etc... are called
 	pub fn from_existing(igloo: &'a Igloo) -> IglooProject
 	{
-		IglooProject
-		{
-			name: 
-		}
+		IglooProject::default(igloo)
+
 	}
 
 	pub fn is_igloo_prj(path: &std::path::PathBuf) -> bool

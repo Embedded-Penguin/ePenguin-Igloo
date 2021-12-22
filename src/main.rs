@@ -11,8 +11,8 @@ fn main()
 		{
 			match ig.run(it)
 			{
-				Ok(rt) => println!("{:?}", rt),
-				Err(e) => println!("Run Error: {:?}", e),
+				IS_GOOD => println!("success"),
+				_ => println!("??"),
 			}
 		}
 		Err(e) => println!("Error: {:?}", e),

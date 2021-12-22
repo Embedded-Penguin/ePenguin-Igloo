@@ -1,6 +1,8 @@
 #![allow(warnings)]
 extern crate clap;
 extern crate config;
+extern crate toml;
+extern crate serde;
 
 use config::Config;
 use std::path::PathBuf;
@@ -16,6 +18,7 @@ mod igloo_env;
 
 use igloo_cli::IglooCliInfo;
 use igloo_env::IglooEnv;
+use igloo_project::IglooProject;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -80,15 +83,15 @@ impl Igloo
 	{
 		let mut res: IglooType = IT_NULL;
 
-		match igloo_manifest::get_master_target_manifest(self)
-		{
-			IS_GOOD => (),
-			e =>
-			{
-				println!("{:?}", e);
-				return Err(e)
-			},
-		}
+		// let master_target_manifest = match igloo_manifest::get_master_target_manifest(self)
+		// {
+		// 	IS_GOOD => ,
+		// 	e =>
+		// 	{
+		// 		println!("{:?}", e);
+		// 		return Err(e)
+		// 	},
+		// }
 
 		// Assign instance type (new, run, push, etc)
 		igloo_action::igloo_subcommand(&self.cli_info.raw)
