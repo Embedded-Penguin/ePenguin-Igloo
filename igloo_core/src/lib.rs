@@ -62,8 +62,6 @@ use IglooType::*;
 pub struct Igloo
 {
 	cli_info: IglooCliInfo,
-	// manifest containing all mcu information
-	master_target_manifest: Config,
 	env: IglooEnv,
 }
 
@@ -73,7 +71,6 @@ impl Igloo
 	{
 		Igloo
 		{
-			master_target_manifest: Config::new(),
 			cli_info: IglooCliInfo::new(),
 			env: IglooEnv::get_env(),
 		}
@@ -83,16 +80,6 @@ impl Igloo
 	{
 		let mut res: IglooType = IT_NULL;
 
-		// let master_target_manifest = match igloo_manifest::get_master_target_manifest(self)
-		// {
-		// 	IS_GOOD => ,
-		// 	e =>
-		// 	{
-		// 		println!("{:?}", e);
-		// 		return Err(e)
-		// 	},
-		// }
-
 		// Assign instance type (new, run, push, etc)
 		igloo_action::igloo_subcommand(&self.cli_info.raw)
 	}
@@ -100,8 +87,52 @@ impl Igloo
 	pub fn run(&self, inst_type: IglooType) -> IglooStatus
 	{
 		let mut res_err = IS_GOOD;
-		let mut prj: IglooProject;
 
+		match inst_type
+		{
+			IT_NEW =>
+			{
+				return igloo_action::ia_new(self,
+								  igloo_cli::ich_new_get_project_name(self),
+								  igloo_cli::ich_new_get_target_name(self))
+			}
+			IT_RUN =>
+			{
+
+			}
+			IT_PUSH =>
+			{
+
+			}
+			IT_PULL =>
+			{
+
+			}
+			IT_HELP =>
+			{
+
+			}
+			IT_BUILD =>
+			{
+
+			}
+			IT_ERASE =>
+			{
+
+			}
+			IT_INFO =>
+			{
+
+			}
+			IT_TARGET =>
+			{
+
+			}
+			IT_NULL =>
+			{
+
+			}
+		}
 		res_err
 	}
 }

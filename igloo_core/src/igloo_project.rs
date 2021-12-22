@@ -32,9 +32,9 @@ impl<'a> IglooProject<'a>
 	/// This means we do not yet have any project in storage
 	/// and we must generate those directories, files, and symlinks
 	/// and then populate the project in memory
-	pub fn from_new(igloo_in: &'a Igloo, project_name: String) -> IglooProject
+	pub fn from_new(igloo_in: &'a Igloo, project_name: String) -> Result<IglooProject, IglooStatus>
 	{
-		IglooProject
+		Ok(IglooProject
 		{
 			name: ich_new_get_project_name(igloo_in),
 			/// targets -- a vector of targets added for this project
@@ -43,7 +43,7 @@ impl<'a> IglooProject<'a>
 
 
 
-		}
+		})
 	}
 
 	/// Used to populate an IglooProject from an existing project

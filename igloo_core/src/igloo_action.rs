@@ -5,6 +5,9 @@ use crate::IglooType::*;
 use crate::IglooStatus;
 use crate::IglooStatus::*;
 
+use crate::Igloo;
+use crate::igloo_project::IglooProject;
+
 pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooType, IglooStatus>
 {
 	let mut _res_type: IglooType = IT_NULL;
@@ -60,4 +63,42 @@ pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooType, IglooStatus>
 	}
 
 	Ok(_res_type)
+}
+
+pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> IglooStatus
+{
+	let mut ret: IglooStatus = IS_GOOD;
+
+	// is igloo project
+	if IglooProject::is_igloo_prj(&igloo.env.cwd)
+	{
+		println!("Calling igloo new from inside igloo project...");
+		ret = IS_BAD;
+		return ret
+	}
+
+	// check if project folder already exists
+	if std::path::Path::new(
+		&igloo.env.cwd.join(&project_name)).exists()
+	{
+		ret = IS_BAD;
+		return ret
+	}
+
+	let created_project = match IglooProject::from_new(igloo, project_name)
+	{
+		Ok(v) => v,
+		Err(e) =>
+		{
+			println!("{:?}", e);
+			panic!();
+		}
+	};
+
+	// Now populate
+	// created_project.populate()
+
+
+
+	ret
 }
