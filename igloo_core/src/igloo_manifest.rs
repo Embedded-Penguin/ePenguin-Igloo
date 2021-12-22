@@ -22,11 +22,6 @@ pub struct IglooTargetManifest
 	targets: HashMap::<String, String>,
 }
 
-#[derive(Serialize,Deserialize,Debug)]
-pub struct IglooMakeManifest
-{
-
-}
 
 impl IglooTargetManifest
 {
@@ -50,14 +45,6 @@ impl IglooTargetManifest
 					.to_str().unwrap()
 			)).unwrap();
 		let ret = target_manifest.try_into::<IglooTargetManifest>().unwrap();
-		println!("{:?}", ret);
-		println!("{:?}", ret.targets["samd21j18a"]);
-		Ok(IglooTargetManifest::default())
+		Ok(ret)
 	}
 }
-
-impl IglooMakeManifest
-{
-
-}
-
