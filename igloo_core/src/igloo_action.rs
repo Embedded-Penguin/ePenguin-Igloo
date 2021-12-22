@@ -85,7 +85,7 @@ pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> Ig
 		return ret
 	}
 
-	let created_project = match IglooProject::from_new(igloo, project_name)
+	let prj = match IglooProject::from_new(igloo, project_name)
 	{
 		Ok(v) => v,
 		Err(e) =>

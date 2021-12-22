@@ -1,0 +1,4 @@
+testvar = "djskaddfjlka"
+[profile]
+name = "myproject"
+targets = ["samd21j18a"]

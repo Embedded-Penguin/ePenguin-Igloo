@@ -19,6 +19,7 @@ mod igloo_env;
 use igloo_cli::IglooCliInfo;
 use igloo_env::IglooEnv;
 use igloo_project::IglooProject;
+use igloo_manifest::IglooTargetManifest;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -61,6 +62,7 @@ use IglooType::*;
 
 pub struct Igloo
 {
+	master_target_manifest: IglooTargetManifest,
 	cli_info: IglooCliInfo,
 	env: IglooEnv,
 }
@@ -73,6 +75,7 @@ impl Igloo
 		{
 			cli_info: IglooCliInfo::new(),
 			env: IglooEnv::get_env(),
+			master_target_manifest: IglooTargetManifest::default(),
 		}
 	}
 
@@ -80,6 +83,8 @@ impl Igloo
 	{
 		let mut res: IglooType = IT_NULL;
 
+		// get master target manifest
+		self.master_target_manifest = IglooTargetManifest::get(self).unwrap();
 		// Assign instance type (new, run, push, etc)
 		igloo_action::igloo_subcommand(&self.cli_info.raw)
 	}

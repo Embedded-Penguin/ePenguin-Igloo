@@ -11,48 +11,53 @@ use crate::IglooType;
 use crate::IglooType::*;
 
 use crate::igloo_target::IglooTarget;
-
 use serde::{Serialize, Deserialize};
 use config::Config;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct IglooProjectManifest
+/// IglooTargetManifest - a manifest file locations which contain each target's
+/// settings and configuration properties
+#[derive(Serialize,Deserialize,Debug)]
+pub struct IglooTargetManifest
 {
-	name: String,
-	targets: Vec::<String>
+	targets: HashMap::<String, String>,
 }
 
-impl IglooProjectManifest
+#[derive(Serialize,Deserialize,Debug)]
+pub struct IglooMakeManifest
 {
-	pub fn default() -> IglooProjectManifest
-	{
-		IglooProjectManifest
-		{
-			name: String::from(""),
-			targets: Vec::default(),
 
+}
+
+impl IglooTargetManifest
+{
+	pub fn default() -> IglooTargetManifest
+	{
+		IglooTargetManifest
+		{
+			targets: HashMap::new(),
 		}
 	}
-	pub fn from_project_file(self, igloo: &Igloo) -> Result<IglooProjectManifest, IglooStatus>
+	pub fn get(igloo: &Igloo) -> Result<IglooTargetManifest, IglooStatus>
 	{
-		let mut config = config::Config::default();
-		config.merge(
+		let mut target_manifest = config::Config::default();
+		target_manifest.merge(
 			config::File::with_name(
 				igloo.env
-					.cwd
+					.esfd
 					.clone()
-					.join("igloo.toml")
-					.to_str().unwrap())).unwrap();
-
-		let z = config.deserialize::<IglooProjectManifest>().unwrap();
-		println!("{:?}", z);
-
-		Ok(IglooProjectManifest::default())
+					.join("manifest")
+					.join("target-manifest.toml")
+					.to_str().unwrap()
+			)).unwrap();
+		let ret = target_manifest.try_into::<IglooTargetManifest>().unwrap();
+		println!("{:?}", ret);
+		println!("{:?}", ret.targets["samd21j18a"]);
+		Ok(IglooTargetManifest::default())
 	}
+}
 
-	pub fn to_project_file(self, igloo: &Igloo) -> IglooStatus
-	{
-		IglooStatus::IS_GOOD
-	}
+impl IglooMakeManifest
+{
+
 }
 
