@@ -35,6 +35,7 @@ pub enum IglooType
 	IT_INFO,
 	IT_TARGET,
 	IT_NULL,
+	IT_DEBUG,
 }
 
 #[derive(Debug)]
@@ -63,6 +64,7 @@ use IglooType::*;
 pub struct Igloo
 {
 	master_target_manifest: IglooTargetManifest,
+	master_make_manifest: Config,
 	cli_info: IglooCliInfo,
 	env: IglooEnv,
 }
@@ -76,6 +78,7 @@ impl Igloo
 			cli_info: IglooCliInfo::new(),
 			env: IglooEnv::get_env(),
 			master_target_manifest: IglooTargetManifest::default(),
+			master_make_manifest: Config::new(),
 		}
 	}
 
@@ -85,6 +88,18 @@ impl Igloo
 
 		// get master target manifest
 		self.master_target_manifest = IglooTargetManifest::get(self).unwrap();
+
+		// get master make manifest
+		// this is a hacky way of doing it until
+		// i can figure out a proper structure for deserializing
+		self.master_make_manifest.merge(
+			config::File::with_name(
+				self.env
+					.esfd
+					.clone()
+					.join("manifest")
+					.join("make-manifest.toml")
+					.to_str().unwrap())).unwrap();
 		// Assign instance type (new, run, push, etc)
 		igloo_action::igloo_subcommand(&self.cli_info.raw)
 	}

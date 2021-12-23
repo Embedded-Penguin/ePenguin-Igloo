@@ -21,7 +21,7 @@ pub struct Settings
 
 /// Basic profile settings
 #[derive(Serialize, Deserialize, Debug)]
-struct Profile
+pub struct Profile
 {
 	name: String,
 	targets: Vec::<String>
@@ -72,14 +72,23 @@ impl Settings
 		IglooStatus::IS_GOOD
 	}
 
-	pub fn set_profile_name(&mut self, name: String)
-	{
-		self.profile.name = name;
-	}
-
 	pub fn add_target(&mut self, target_name: String)
 	{
+		if self.profile.targets.contains(&target_name)
+		{
+			return
+		}
 		self.profile.targets.push(target_name);
+	}
+
+	pub fn get_targets(project: IglooProject) -> Vec<IglooTarget>
+	{
+		let _targets: Vec<IglooTarget> = Vec::new();
+		for target in project.config.profile.targets.iter()
+		{
+			_targets.push(IglooTarget::from(project.igloo, *target).unwrap());
+		}
+		_targets
 	}
 }
 
@@ -87,6 +96,7 @@ pub struct IglooProject<'a>
 {
 	igloo: &'a Igloo,
 	config: Settings,
+	targets: Vec::<IglooTarget>,
 }
 
 impl<'a> IglooProject<'a>
@@ -97,7 +107,7 @@ impl<'a> IglooProject<'a>
 		{
 			igloo: igloo_in,
 			config: Settings::default(),
-
+			targets: Vec::new(),
 		}
 	}
 	/// Used to populate an IglooProject from scratch
@@ -105,11 +115,12 @@ impl<'a> IglooProject<'a>
 	pub fn from_new(igloo_in: &'a Igloo, project_name: String) -> Result<IglooProject, IglooStatus>
 	{
 		let mut settings = Settings::default();
-		settings.set_profile_name(project_name);
+		settings.profile.name = project_name;
 		Ok(IglooProject
 		{
 			igloo: igloo_in,
 			config: settings,
+			targets: Vec::new(),
 		})
 	}
 
@@ -118,11 +129,15 @@ impl<'a> IglooProject<'a>
 	/// igloo run, push, pull, erase, etc... are called
 	pub fn from_existing(igloo_in: &'a Igloo) -> Result<IglooProject, IglooStatus>
 	{
-		Ok(IglooProject
-		   {
-			   igloo: igloo_in,
-			   config: Settings::default().from_project_file(igloo_in).unwrap(),
-		   })
+		let mut ret_project: IglooProject = IglooProject
+		{
+			igloo: igloo_in,
+			config: Settings::default().from_project_file(igloo_in).unwrap(),
+			targets: Vec::new(),
+		};
+
+		ret_project.targets = crate::igloo_project::Settings::get_targets(ret_project);
+		Ok(ret_project)
 	}
 
 	pub fn is_igloo_prj(path: &std::path::PathBuf) -> bool
@@ -141,15 +156,114 @@ impl<'a> IglooProject<'a>
 
 	/// creates project files
 	/// including igloo.toml
-	pub fn generate(self) -> IglooStatus
+	pub fn generate(&self) -> IglooStatus
 	{
-		IglooStatus::IS_GOOD
+		let mut ret: IglooStatus = IS_GOOD;
+
+		// making this root and then cloning to work with active directory
+		// so i can make changes to active dir and still have my project root if i need it
+		// so far i havent needed it so i may just remove this
+
+		let active_dir = std::path::PathBuf::new().join(&self.config.profile.name);
+		// create new project directory
+		match std::fs::create_dir(&active_dir)
+		{
+			Err(e) =>
+			{
+				println!("{:?}", e);
+				return IS_BAD
+			}
+			_ => (),
+		}
+
+		// create igloo directory
+		match std::fs::create_dir(&active_dir.clone().join("inc"))
+		{
+			Err(e) =>
+			{
+				println!("{:?}", e);
+				return IS_BAD
+			}
+			_ => (),
+		}
+
+		// create src directory
+		match std::fs::create_dir(&active_dir.clone().join("src"))
+		{
+			Err(e) =>
+			{
+				println!("{:?}", e);
+				return IS_BAD
+			}
+			_ => (),
+		}
+
+		match std::fs::create_dir(&active_dir.clone().join("cfg"))
+		{
+			Err(e) =>
+			{
+				println!("{:?}", e);
+				return IS_BAD
+			}
+			_ => (),
+		}
+
+		match std::fs::create_dir(&active_dir.clone().join("esf"))
+		{
+			Err(e) =>
+			{
+				println!("{:?}", e);
+				return IS_BAD
+			}
+			_ => (),
+		}
+
+		// project folders finished
+		// now do target folders
+		ret = self.generate_targets();
+		if ret != IS_GOOD
+		{
+			return ret
+		}
+
+		ret = self.generate_igloo_header();
+		if ret != IS_GOOD
+		{
+			return ret
+		}
+
+		ret = self.generate_igloo_main();
+		if ret != IS_GOOD
+		{
+			return ret
+		}
+
+		return ret
 	}
 
-	pub fn add_target(&mut self, target: String) -> IglooStatus
+	pub fn add_target_to_config(&mut self, target: String) -> IglooStatus
 	{
 		let mut ret = IS_GOOD;
 		self.config.add_target(target);
 		ret
+	}
+
+	fn generate_targets(&self) -> IglooStatus
+	{
+		for target in self.targets
+		{
+			target.generate(self);
+		}
+		IS_GOOD
+	}
+
+	fn generate_igloo_header(&self) -> IglooStatus
+	{
+		IS_GOOD
+	}
+
+	fn generate_igloo_main(&self) -> IglooStatus
+	{
+		IS_GOOD
 	}
 }

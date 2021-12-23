@@ -53,6 +53,11 @@ pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooType, IglooStatus>
 			println!("Igloo target was called");
 			_res_type = IT_TARGET;
 		}
+		Some("debug") =>
+		{
+			println!("Igloo debug was called");
+			_res_type = IT_DEBUG;
+		}
 		None => unreachable!(),
 		_ => unreachable!(),
 	}
@@ -65,6 +70,8 @@ pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooType, IglooStatus>
 	Ok(_res_type)
 }
 
+// this will eventually be implemented so that projects can be created without an initial target
+// for now it's necessary
 pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> IglooStatus
 {
 	let mut ret: IglooStatus = IS_GOOD;
@@ -85,7 +92,7 @@ pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> Ig
 		return ret
 	}
 
-	let prj = match IglooProject::from_new(igloo, project_name)
+	let mut prj = match IglooProject::from_new(igloo, project_name)
 	{
 		Ok(v) => v,
 		Err(e) =>
@@ -95,10 +102,20 @@ pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> Ig
 		}
 	};
 
+	prj.add_new_target(initial_target);
+
 	// Now populate
-	// created_project.populate()
+	prj.generate();
 
 
+
+	ret
+}
+
+/// Debugging function to make sure projects are being loaded correctly
+pub fn ia_debug(igloo: &Igloo) -> IglooStatus
+{
+	let mut ret = IS_GOOD;
 
 	ret
 }
