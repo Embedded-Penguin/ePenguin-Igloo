@@ -15,12 +15,13 @@ mod igloo_project;
 mod igloo_manifest;
 mod igloo_cli;
 mod igloo_env;
+mod igloo_util;
 
 use igloo_cli::IglooCliInfo;
 use igloo_env::IglooEnv;
 use igloo_project::IglooProject;
 use igloo_manifest::IglooTargetManifest;
-
+use igloo_util::*;
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum IglooType
@@ -38,8 +39,7 @@ pub enum IglooType
 	IT_DEBUG,
 }
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum IglooDebugSeverity
 {
 	CRITICAL = 0,
@@ -60,18 +60,19 @@ pub enum IglooStatus
 
 use IglooStatus::*;
 use IglooType::*;
+use IglooDebugSeverity::*;
 
 pub struct Igloo
 {
-	master_target_manifest: IglooTargetManifest,
-	master_make_manifest: Config,
-	cli_info: IglooCliInfo,
-	env: IglooEnv,
+	pub master_target_manifest: IglooTargetManifest,
+	pub master_make_manifest: Config,
+	pub cli_info: IglooCliInfo,
+	pub env: IglooEnv,
 }
 
 impl Igloo
 {
-	pub fn new() -> Self
+	pub fn new() -> Igloo
 	{
 		Igloo
 		{
@@ -88,6 +89,9 @@ impl Igloo
 
 		// get master target manifest
 		self.master_target_manifest = IglooTargetManifest::get(self).unwrap();
+
+		igloo_debug!(TRACE, IS_GOOD, "Hello \n{:?}", self.master_target_manifest);
+		igloo_debug!(TRACE, IS_GOOD, "TEST");
 
 		// get master make manifest
 		// this is a hacky way of doing it until
@@ -149,6 +153,10 @@ impl Igloo
 
 			}
 			IT_NULL =>
+			{
+
+			}
+			IT_DEBUG =>
 			{
 
 			}

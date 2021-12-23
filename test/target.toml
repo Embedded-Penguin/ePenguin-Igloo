@@ -1,17 +1,17 @@
-[esf.links]
+name = "${TARGET}"
+
+[esf]
 common = "arch/arm/common"
 mcu = "arch/arm/SAMD21/SAMD21A/mcu"
 ld = "arch/arm/SAMD21/SAMD21A/ld"
 cfg = "arch/arm/SAMD21/SAMD21A/manifest"
-[esf.includes]
-IGLOO_INCLUDES = ["sam.h"]
-
+includes = ["sam.h"]
 # These are defaults. Once a project is generated, the .cfg can be freely edited without fear of anything being overwritten. However, I do not recommend editing any of the _cfg variables.
-[esf.scripts]
 scripts = ["arch/arm/SAMD21/SAMD21A/scripts/${TARGET}.cfg", "scripts"]
-
 # lineage for this family of mcus
 # this is used to evaluate makefile requirements for mcus
 # this will be evaluated to "arch.arm.samd21a.<mcu_name>
-[esf.make]
 series = "arch.arm.samd21a.${TARGET}"
+
+[user]
+# Add user config options here

@@ -2,7 +2,7 @@
 name = "igloo"
 version = "0.1.0"
 authors = ["Penguin <...>"]
-edition = "2018"
+edition = "2021"
 repository = "https://github.com/Embedded-Penguin/ePenguin-igloo/"
 readme = "README.md"
 description = "Igloo is a package/project manager. It is used for bare metal embedded systems. It is in its early stages of development. The goal of this project is to reduce the pain of writing embedded code by bridging the gap between many different manufacturers. It is can be thought of as glue for many of the fragmented pieces in the embedded world. This is also a learning project for me. Not all of this code will be the most efficient. I wanted to use a problem I saw as an opportunity to learn rust. Advice is welcome."

@@ -19,7 +19,7 @@ use config::Config;
 #[derive(Serialize,Deserialize,Debug)]
 pub struct IglooTargetManifest
 {
-	targets: HashMap::<String, String>,
+	pub targets: HashMap::<String, String>,
 }
 
 

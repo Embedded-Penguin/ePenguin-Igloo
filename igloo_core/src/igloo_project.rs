@@ -7,24 +7,25 @@ use crate::IglooType::*;
 use crate::IglooStatus;
 use crate::IglooStatus::*;
 
+use crate::igloo_project;
 use crate::igloo_target::IglooTarget;
 
 use serde::{Serialize, Deserialize};
 use config::Config;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Settings
 {
-	testvar: String,
-	profile: Profile,
+	pub testvar: String,
+	pub profile: Profile,
 }
 
 /// Basic profile settings
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Profile
 {
-	name: String,
-	targets: Vec::<String>
+	pub name: String,
+	pub targets: Vec::<String>
 
 }
 
@@ -81,12 +82,12 @@ impl Settings
 		self.profile.targets.push(target_name);
 	}
 
-	pub fn get_targets(project: IglooProject) -> Vec<IglooTarget>
+	pub fn get_targets_from_config(igloo: &Igloo, config: &Settings) -> Vec<IglooTarget>
 	{
-		let _targets: Vec<IglooTarget> = Vec::new();
-		for target in project.config.profile.targets.iter()
+		let mut _targets: Vec<IglooTarget> = Vec::new();
+		for target in config.profile.targets.iter()
 		{
-			_targets.push(IglooTarget::from(project.igloo, *target).unwrap());
+			_targets.push(IglooTarget::target_from_name(igloo, String::from(target)).unwrap());
 		}
 		_targets
 	}
@@ -94,9 +95,10 @@ impl Settings
 
 pub struct IglooProject<'a>
 {
-	igloo: &'a Igloo,
-	config: Settings,
+	pub igloo: &'a Igloo,
+	pub config: Settings,
 	targets: Vec::<IglooTarget>,
+	pub root: std::path::PathBuf,
 }
 
 impl<'a> IglooProject<'a>
@@ -108,6 +110,7 @@ impl<'a> IglooProject<'a>
 			igloo: igloo_in,
 			config: Settings::default(),
 			targets: Vec::new(),
+			root: std::path::PathBuf::new(),
 		}
 	}
 	/// Used to populate an IglooProject from scratch
@@ -115,12 +118,13 @@ impl<'a> IglooProject<'a>
 	pub fn from_new(igloo_in: &'a Igloo, project_name: String) -> Result<IglooProject, IglooStatus>
 	{
 		let mut settings = Settings::default();
-		settings.profile.name = project_name;
+		settings.profile.name = String::from(&project_name);
 		Ok(IglooProject
 		{
 			igloo: igloo_in,
 			config: settings,
 			targets: Vec::new(),
+			root: igloo_in.env.cwd.join(&project_name),
 		})
 	}
 
@@ -129,15 +133,17 @@ impl<'a> IglooProject<'a>
 	/// igloo run, push, pull, erase, etc... are called
 	pub fn from_existing(igloo_in: &'a Igloo) -> Result<IglooProject, IglooStatus>
 	{
-		let mut ret_project: IglooProject = IglooProject
+		let _config = Settings::default().from_project_file(igloo_in).unwrap();
+		let _targets = Settings::get_targets_from_config(igloo_in, &_config);
+		let _root = igloo_in.env.cwd.join(&_config.profile.name);
+		let ret_project = IglooProject
 		{
 			igloo: igloo_in,
-			config: Settings::default().from_project_file(igloo_in).unwrap(),
-			targets: Vec::new(),
+			config: _config,
+			targets: _targets,
+			root: _root,
 		};
-
-		ret_project.targets = crate::igloo_project::Settings::get_targets(ret_project);
-		Ok(ret_project)
+		Ok(IglooProject::default(igloo_in))
 	}
 
 	pub fn is_igloo_prj(path: &std::path::PathBuf) -> bool
@@ -250,7 +256,7 @@ impl<'a> IglooProject<'a>
 
 	fn generate_targets(&self) -> IglooStatus
 	{
-		for target in self.targets
+		for target in &self.targets
 		{
 			target.generate(self);
 		}

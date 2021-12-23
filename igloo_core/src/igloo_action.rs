@@ -1,12 +1,11 @@
 use clap::ArgMatches;
 
-use crate::IglooType;
-use crate::IglooType::*;
-use crate::IglooStatus;
-use crate::IglooStatus::*;
-
+use crate::IglooType::{self, *};
+use crate::IglooStatus::{self, *};
+use crate::IglooDebugSeverity::{self, *};
 use crate::Igloo;
 use crate::igloo_project::IglooProject;
+use crate::igloo_util::*;
 
 pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooType, IglooStatus>
 {
@@ -15,47 +14,47 @@ pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooType, IglooStatus>
 	{
 		Some("new") =>
 		{
-			println!("Igloo new was called!");
+			igloo_debug!(TRACE, IS_GOOD, "Igloo new was called!");
 			_res_type = IT_NEW;
 		}
 		Some("run") =>
 		{
-			println!("Igloo run was called!");
+			igloo_debug!(TRACE, IS_GOOD, "Igloo run was called!");
 			_res_type = IT_RUN;
 		}
 		Some("build") =>
 		{
-			println!("Igloo build was called!");
+			igloo_debug!(TRACE, IS_GOOD, "Igloo build was called!");
 			_res_type = IT_BUILD;
 		}
 		Some("push") =>
 		{
-			println!("Igloo flash was called!");
+			igloo_debug!(TRACE, IS_GOOD, "Igloo flash was called!");
 			_res_type = IT_PUSH;
 		}
 		Some("pull") =>
 		{
-			println!("Igloo pull was called!");
+			igloo_debug!(TRACE, IS_GOOD, "Igloo pull was called!");
 			_res_type = IT_PULL;
 		}
 		Some("erase") =>
 		{
-			println!("Igloo erase was called!");
+			igloo_debug!(TRACE, IS_GOOD, "Igloo erase was called!");
 			_res_type = IT_ERASE;
 		}
 		Some("info") =>
 		{
-			println!("Igloo info was called!");
+			igloo_debug!(TRACE, IS_GOOD, "Igloo info was called!");
 			_res_type = IT_INFO;
 		}
 		Some("target") =>
 		{
-			println!("Igloo target was called");
+			igloo_debug!(TRACE, IS_GOOD, "Igloo target was called");
 			_res_type = IT_TARGET;
 		}
 		Some("debug") =>
 		{
-			println!("Igloo debug was called");
+			igloo_debug!(TRACE, IS_GOOD, "Igloo debug was called");
 			_res_type = IT_DEBUG;
 		}
 		None => unreachable!(),
@@ -102,7 +101,7 @@ pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> Ig
 		}
 	};
 
-	prj.add_new_target(initial_target);
+	prj.add_target_to_config(initial_target);
 
 	// Now populate
 	prj.generate();
