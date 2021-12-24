@@ -4,13 +4,12 @@ use std::collections::HashMap;
 use std::vec::Vec;
 use crate::Igloo;
 
-use crate::IglooStatus;
-use crate::IglooStatus::*;
-
-use crate::IglooType;
-use crate::IglooType::*;
+use crate::IglooStatus::{self, *};
+use crate::IglooType::{self, *};
+use crate::IglooDebugSeverity::{self, *};
 
 use crate::igloo_target::IglooTarget;
+use crate::igloo_util::*;
 use serde::{Serialize, Deserialize};
 use config::Config;
 
@@ -34,6 +33,11 @@ impl IglooTargetManifest
 	}
 	pub fn get(igloo: &Igloo) -> Result<IglooTargetManifest, IglooStatus>
 	{
+		igloo_debug!(TRACE,
+					 IS_NONE,
+					 "Reading master target manifest from {}",
+					 igloo.env.esfd.join("manifest").join("target-manifest.toml").to_str().unwrap());
+
 		let mut target_manifest = config::Config::default();
 		target_manifest.merge(
 			config::File::with_name(
@@ -45,6 +49,10 @@ impl IglooTargetManifest
 					.to_str().unwrap()
 			)).unwrap();
 		let ret = target_manifest.try_into::<IglooTargetManifest>().unwrap();
+
+		igloo_debug!(INFO,
+					 IS_NONE,
+					 "Target Manifest deserialized: \n{:?}", ret);
 		Ok(ret)
 	}
 }

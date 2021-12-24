@@ -42,20 +42,22 @@ pub enum IglooType
 #[derive(Debug, PartialEq, Clone)]
 pub enum IglooDebugSeverity
 {
-	CRITICAL = 0,
+	ERROR = 0,
 	WARNING = 1,
-	INFO = 2,
+	LOG = 2,
 	TRACE = 3,
+	INFO = 4,
 }
 
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum IglooStatus
 {
-	IS_GOOD = 0x00,
-	IS_BAD = 0x01,
-	IS_UNKNOWN = 0x02,
-	IS_FAILED_TO_LOAD_MTM = 0x03,
+	IS_GOOD = 					0x00,
+	IS_BAD = 					0x01,
+	IS_UNKNOWN = 				0x02,
+	IS_FAILED_TO_LOAD_MTM = 	0x03,
+	IS_NONE = 					0xFF,
 }
 
 use IglooStatus::*;
@@ -90,12 +92,19 @@ impl Igloo
 		// get master target manifest
 		self.master_target_manifest = IglooTargetManifest::get(self).unwrap();
 
-		igloo_debug!(TRACE, IS_GOOD, "Hello \n{:?}", self.master_target_manifest);
-		igloo_debug!(TRACE, IS_GOOD, "TEST");
-
 		// get master make manifest
 		// this is a hacky way of doing it until
 		// i can figure out a proper structure for deserializing
+		igloo_debug!(TRACE,
+					 IS_NONE,
+					 "Reading master makefile manifest from {}",
+					 self.env
+					 .esfd
+					 .clone()
+					 .join("manifest")
+					 .join("make-manifest.toml")
+					 .to_str().unwrap());
+
 		self.master_make_manifest.merge(
 			config::File::with_name(
 				self.env
@@ -104,6 +113,8 @@ impl Igloo
 					.join("manifest")
 					.join("make-manifest.toml")
 					.to_str().unwrap())).unwrap();
+
+		igloo_debug!(INFO, IS_NONE, "Read master makefile manifest: \n{:?}", self.master_make_manifest);
 		// Assign instance type (new, run, push, etc)
 		igloo_action::igloo_subcommand(&self.cli_info.raw)
 	}

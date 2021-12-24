@@ -7,27 +7,33 @@ macro_rules! igloo_debug
 {
 	($severity:expr, $status:expr) =>
 	{
-		if TRACE_LEVEL.clone() as u8 <= $severity as u8
+		if cfg!(debug_assertions)
 		{
-			println!("[{:?}]: Line {:?} in {:?} | {:?}",
-					 $severity,
-					 line!(),
-					 file!(),
-					 $status);
+			if $severity as u8 <= TRACE_LEVEL.clone() as u8
+			{
+				println!("[{:?}]: Line {:?} in {:?} | {:?}",
+						 $severity,
+						 line!(),
+						 file!(),
+						 $status);
+			}
 		}
 	};
 
 	($severity:expr, $status:expr, $($message:tt)*) =>
 	{
-		if TRACE_LEVEL.clone() as u8 <= $severity as u8
+		if cfg!(debug_assertions)
 		{
-			println!("[{:?}]: Line {:?} in {:?} | {:?} -- {}",
-					 $severity,
-					 line!(),
-					 file!(),
-					 $status,
-					 format_args!($($message)*)
-			);
+			if $severity as u8 <= TRACE_LEVEL.clone() as u8
+			{
+				println!("[{:?}]: Line {:?} in {} | {} -- STATUS: {:?}",
+						 $severity,
+						 line!(),
+						 file!(),
+						 format_args!($($message)*),
+						 $status
+				);
+			}
 		}
 	};
 }

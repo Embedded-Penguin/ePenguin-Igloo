@@ -14,47 +14,47 @@ pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooType, IglooStatus>
 	{
 		Some("new") =>
 		{
-			igloo_debug!(TRACE, IS_GOOD, "Igloo new was called!");
+			igloo_debug!(TRACE, IS_NONE, "Igloo new was called!");
 			_res_type = IT_NEW;
 		}
 		Some("run") =>
 		{
-			igloo_debug!(TRACE, IS_GOOD, "Igloo run was called!");
+			igloo_debug!(TRACE, IS_NONE, "Igloo run was called!");
 			_res_type = IT_RUN;
 		}
 		Some("build") =>
 		{
-			igloo_debug!(TRACE, IS_GOOD, "Igloo build was called!");
+			igloo_debug!(TRACE, IS_NONE, "Igloo build was called!");
 			_res_type = IT_BUILD;
 		}
 		Some("push") =>
 		{
-			igloo_debug!(TRACE, IS_GOOD, "Igloo flash was called!");
+			igloo_debug!(TRACE, IS_NONE, "Igloo flash was called!");
 			_res_type = IT_PUSH;
 		}
 		Some("pull") =>
 		{
-			igloo_debug!(TRACE, IS_GOOD, "Igloo pull was called!");
+			igloo_debug!(TRACE, IS_NONE, "Igloo pull was called!");
 			_res_type = IT_PULL;
 		}
 		Some("erase") =>
 		{
-			igloo_debug!(TRACE, IS_GOOD, "Igloo erase was called!");
+			igloo_debug!(TRACE, IS_NONE, "Igloo erase was called!");
 			_res_type = IT_ERASE;
 		}
 		Some("info") =>
 		{
-			igloo_debug!(TRACE, IS_GOOD, "Igloo info was called!");
+			igloo_debug!(TRACE, IS_NONE, "Igloo info was called!");
 			_res_type = IT_INFO;
 		}
 		Some("target") =>
 		{
-			igloo_debug!(TRACE, IS_GOOD, "Igloo target was called");
+			igloo_debug!(TRACE, IS_NONE, "Igloo target was called");
 			_res_type = IT_TARGET;
 		}
 		Some("debug") =>
 		{
-			igloo_debug!(TRACE, IS_GOOD, "Igloo debug was called");
+			igloo_debug!(TRACE, IS_NONE, "Igloo debug was called");
 			_res_type = IT_DEBUG;
 		}
 		None => unreachable!(),
