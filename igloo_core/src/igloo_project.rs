@@ -1,12 +1,11 @@
 use crate::Igloo;
 use crate::igloo_cli::*;
 
-use crate::IglooType;
-use crate::IglooType::*;
+use crate::IglooType::{self, *};
+use crate::IglooStatus::{self, *};
+use crate::IglooDebugSeverity::{self, *};
 
-use crate::IglooStatus;
-use crate::IglooStatus::*;
-
+use crate::igloo_util::*;
 use crate::igloo_project;
 use crate::igloo_target::IglooTarget;
 
@@ -117,6 +116,7 @@ impl<'a> IglooProject<'a>
 	/// This takes input from cli and generates the project in memory
 	pub fn from_new(igloo_in: &'a Igloo, project_name: String) -> Result<IglooProject, IglooStatus>
 	{
+		igloo_debug!(TRACE, IS_NONE, "Creating new igloo project named {}", project_name);
 		let mut settings = Settings::default();
 		settings.profile.name = String::from(&project_name);
 		Ok(IglooProject
@@ -263,12 +263,12 @@ impl<'a> IglooProject<'a>
 		IS_GOOD
 	}
 
-	fn generate_igloo_header(&self) -> IglooStatus
+	pub fn generate_igloo_header(&self) -> IglooStatus
 	{
-		IS_GOOD
+		IS_BAD
 	}
 
-	fn generate_igloo_main(&self) -> IglooStatus
+	pub fn generate_igloo_main(&self) -> IglooStatus
 	{
 		IS_GOOD
 	}

@@ -53,11 +53,13 @@ pub enum IglooDebugSeverity
 #[derive(PartialEq)]
 pub enum IglooStatus
 {
-	IS_GOOD = 					0x00,
-	IS_BAD = 					0x01,
-	IS_UNKNOWN = 				0x02,
-	IS_FAILED_TO_LOAD_MTM = 	0x03,
-	IS_NONE = 					0xFF,
+	IS_GOOD = 						0x00,
+	IS_BAD = 						0x01,
+	IS_UNKNOWN = 					0x02,
+	IS_FAILED_TO_LOAD_MTM = 		0x03,
+	IS_NEW_CALLED_IN_EXISTING_PRJ = 0x04,
+	IS_NEW_DIR_ALREADY_EXISTS = 	0x05,
+	IS_NONE = 						0xFF,
 }
 
 use IglooStatus::*;

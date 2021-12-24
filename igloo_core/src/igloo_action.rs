@@ -78,8 +78,8 @@ pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> Ig
 	// is igloo project
 	if IglooProject::is_igloo_prj(&igloo.env.cwd)
 	{
-		println!("Calling igloo new from inside igloo project...");
-		ret = IS_BAD;
+		ret = IS_NEW_CALLED_IN_EXISTING_PRJ;
+		igloo_debug!(WARNING, ret);
 		return ret
 	}
 
@@ -87,7 +87,8 @@ pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> Ig
 	if std::path::Path::new(
 		&igloo.env.cwd.join(&project_name)).exists()
 	{
-		ret = IS_BAD;
+		ret = IS_NEW_DIR_ALREADY_EXISTS;
+		igloo_debug!(WARNING, ret);
 		return ret
 	}
 
@@ -96,15 +97,38 @@ pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> Ig
 		Ok(v) => v,
 		Err(e) =>
 		{
-			println!("{:?}", e);
-			panic!();
+			igloo_debug!(ERROR, e);
+			return e
 		}
 	};
 
-	prj.add_target_to_config(initial_target);
+	ret = prj.add_target_to_config(initial_target);
+	if ret != IS_GOOD
+	{
+		igloo_debug!(ERROR, ret);
+		return ret
+	}
 
 	// Now populate
-	prj.generate();
+	ret = prj.generate();
+	if ret != IS_GOOD
+	{
+		igloo_debug!(ERROR, ret);
+		return ret
+	}
+
+	ret = prj.generate_igloo_header();
+	if ret != IS_GOOD
+	{
+		igloo_debug!(ERROR, ret);
+		return ret
+	}
+
+	ret = prj.generate_igloo_main();
+	if ret != IS_GOOD
+	{
+		igloo_debug!(ERROR, ret);
+	}
 
 
 
