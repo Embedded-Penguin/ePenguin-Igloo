@@ -10,20 +10,33 @@ use std::env;
 use directories::*;
 
 pub mod igloo_target;
-mod igloo_action;
-mod igloo_project;
-mod igloo_manifest;
-mod igloo_cli;
-mod igloo_env;
-mod igloo_util;
+pub mod igloo_action;
+pub mod igloo_project;
+pub mod igloo_manifest;
+pub mod igloo_cli;
+pub mod igloo_env;
+pub mod igloo_util;
 
 use igloo_cli::IglooCliInfo;
 use igloo_env::IglooEnv;
 use igloo_project::IglooProject;
 use igloo_manifest::IglooTargetManifest;
 use igloo_util::*;
+
+
+
 #[derive(Debug)]
 #[derive(PartialEq)]
+/// * IT_NEW: Create a new igloo project
+/// * IT_RUN: build the project if needed, then run the project, defaults to default target set in your project's profile
+/// * IT_PUSH: build the project if needed, then upload your binary to your target
+/// * IT_PULL: extracts binary from mcu (if possible) and saves it
+/// * IT_HELP: gets help
+/// * IT_BUILD: builds the project for all targets unless otherwise specified
+/// * IT_ERASE: erases the flash for the specified target
+/// * IT_INFO: Gets information about igloo and your project.
+/// * IT_NULL: Default type... used for debugging and development. More on this later
+/// * IT_DEBUG: this state is useful for debugging project failures. Only to be used in debug build of igloo. More on this later
 pub enum IglooType
 {
 	IT_NEW = 0,
@@ -94,9 +107,6 @@ impl Igloo
 		// get master target manifest
 		self.master_target_manifest = IglooTargetManifest::get(self).unwrap();
 
-		// get master make manifest
-		// this is a hacky way of doing it until
-		// i can figure out a proper structure for deserializing
 		igloo_debug!(TRACE,
 					 IS_NONE,
 					 "Reading master makefile manifest from {}",
@@ -107,6 +117,9 @@ impl Igloo
 					 .join("make-manifest.toml")
 					 .to_str().unwrap());
 
+		// get master make manifest
+		// this is a hacky way of doing it until
+		// i can figure out a proper structure for deserializing
 		self.master_make_manifest.merge(
 			config::File::with_name(
 				self.env
