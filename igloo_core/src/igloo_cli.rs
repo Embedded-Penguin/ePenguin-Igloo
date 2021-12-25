@@ -1,10 +1,9 @@
-use clap::{App, Arg, ArgMatches};
+use clap::{App, Arg};
 
 use crate::Igloo;
-use crate::IglooType;
-use crate::IglooType::*;
-use crate::IglooStatus;
-use crate::IglooStatus::*;
+// use igloo_util::IglooDebugSeverity::*;
+// use igloo_util::IglooStatus::{self, *};
+// use igloo_util::TRACE_LEVEL;
 
 /// Information input via cli will be stored here for the lifetime of the process
 pub struct IglooCliInfo

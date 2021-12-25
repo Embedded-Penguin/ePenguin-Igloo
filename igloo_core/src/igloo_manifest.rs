@@ -1,17 +1,13 @@
 // igloo_manifest is a simple collection of functions that work with configs
 
 use std::collections::HashMap;
-use std::vec::Vec;
 use crate::Igloo;
 
-use crate::IglooStatus::{self, *};
-use crate::IglooType::{self, *};
-use crate::IglooDebugSeverity::{self, *};
-
-use crate::igloo_target::IglooTarget;
-use crate::igloo_util::*;
 use serde::{Serialize, Deserialize};
-use config::Config;
+
+use igloo_util::IglooDebugSeverity::*;
+use igloo_util::IglooStatus::{self, *};
+use igloo_util::TRACE_LEVEL;
 
 /// IglooTargetManifest - a manifest file locations which contain each target's
 /// settings and configuration properties

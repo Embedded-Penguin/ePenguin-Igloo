@@ -12,7 +12,8 @@ license="GPL-2.0"
 [dependencies]
 igloo_core = { path = "./igloo_core" }
 igloo_agent = { path = "./igloo_agent" }
+igloo_util = { path = "./igloo_util" }
 
 
 [workspace]
-members = ["igloo_core", "igloo_agent"]
+members = ["igloo_core", "igloo_agent", "igloo_util"]

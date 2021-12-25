@@ -1,11 +1,13 @@
 use clap::ArgMatches;
 
-use crate::IglooType::{self, *};
-use crate::IglooStatus::{self, *};
-use crate::IglooDebugSeverity::{self, *};
+use igloo_util::IglooDebugSeverity::*;
+use igloo_util::IglooStatus::{self, *};
+use igloo_util::IglooType::{self, *};
+use igloo_util::TRACE_LEVEL;
 use crate::Igloo;
 use crate::igloo_project::IglooProject;
-use crate::igloo_util::*;
+use crate::igloo_project::Settings;
+
 
 pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooType, IglooStatus>
 {
@@ -92,22 +94,21 @@ pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> Ig
 		return ret
 	}
 
+	igloo_debug!(TRACE, IS_NONE, "Creating new igloo project...");
 	let mut prj = match IglooProject::from_new(igloo, project_name)
 	{
 		Ok(v) => v,
 		Err(e) =>
 		{
-			igloo_debug!(ERROR, e);
-			return e
+			ret = e;
+			igloo_debug!(ERROR, ret);
+			return ret
 		}
 	};
 
-	ret = prj.add_target_to_config(initial_target);
-	if ret != IS_GOOD
-	{
-		igloo_debug!(ERROR, ret);
-		return ret
-	}
+	// add initial target to config
+	prj.config.add_target(initial_target);
+	prj.targets = Settings::get_targets_from_config(&prj);
 
 	// Now populate
 	ret = prj.generate();
@@ -130,8 +131,11 @@ pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> Ig
 		igloo_debug!(ERROR, ret);
 	}
 
-
-
+	ret = prj.generate_project_config();
+	if ret != IS_GOOD
+	{
+		igloo_debug!(ERROR, ret);
+	}
 	ret
 }
 

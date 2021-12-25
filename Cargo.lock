@@ -154,6 +154,7 @@ version = "0.1.0"
 dependencies = [
  "igloo_agent",
  "igloo_core",
+ "igloo_util",
 ]
 
 [[package]]
@@ -170,9 +171,14 @@ dependencies = [
  "clap",
  "config",
  "directories",
+ "igloo_util",
  "serde 1.0.132",
  "toml",
 ]
+
+[[package]]
+name = "igloo_util"
+version = "0.1.0"
 
 [[package]]
 name = "indexmap"

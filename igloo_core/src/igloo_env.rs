@@ -1,6 +1,6 @@
 use crate::{PathBuf, env, UserDirs};
 
-static PROJECT_CONFIG_FILE_NAME: &str = "igloo.toml";
+// static PROJECT_CONFIG_FILE_NAME: &str = "igloo.toml";
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct IglooEnv

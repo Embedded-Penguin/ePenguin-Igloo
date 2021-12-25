@@ -1,21 +1,17 @@
 use crate::Igloo;
-use crate::igloo_cli::*;
 
-use crate::IglooType::{self, *};
-use crate::IglooStatus::{self, *};
-use crate::IglooDebugSeverity::{self, *};
-
-use crate::igloo_util::*;
-use crate::igloo_project;
 use crate::igloo_target::IglooTarget;
 
 use serde::{Serialize, Deserialize};
-use config::Config;
+use std::fs::{OpenOptions};
+use igloo_util::IglooDebugSeverity::*;
+use igloo_util::IglooStatus::{self, *};
+use igloo_util::TRACE_LEVEL;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Settings
 {
-	pub testvar: String,
+	pub testvar: Option<String>,
 	pub profile: Profile,
 }
 
@@ -46,16 +42,16 @@ impl Settings
 	{
 		Settings
 		{
-			testvar: String::new(),
+			testvar: Option::default(),
 			profile: Profile::default(),
 		}
 	}
-	pub fn from_project_file(self, igloo: &Igloo) -> Result<Settings, IglooStatus>
+	pub fn from_project_file(prj: &IglooProject) -> Result<Settings, IglooStatus>
 	{
 		let mut config = config::Config::default();
 		config.merge(
 			config::File::with_name(
-				igloo.env
+				prj.igloo.env
 					.cwd
 					.clone()
 					.join("test")
@@ -67,8 +63,23 @@ impl Settings
 
 	}
 
-	pub fn to_project_file(self, igloo: &Igloo) -> IglooStatus
+	pub fn to_project_file(prj: &IglooProject) -> IglooStatus
 	{
+		let prj_cfg_path = prj
+			.root
+			.clone()
+			.join("igloo")
+			.join("igloo.toml");
+		std::fs::File::create(&prj_cfg_path).unwrap();
+		let mut prj_cfg_file = OpenOptions::new()
+			.write(true)
+			.append(true)
+			.open(&prj_cfg_path)
+			.unwrap();
+
+		let contents = toml::to_string(&prj.config).unwrap();
+		igloo_debug!(TRACE, IS_NONE, "{}", contents);
+		println!("PRINTING THIS ON ITS OWN: {}", contents);
 		IglooStatus::IS_GOOD
 	}
 
@@ -81,12 +92,14 @@ impl Settings
 		self.profile.targets.push(target_name);
 	}
 
-	pub fn get_targets_from_config(igloo: &Igloo, config: &Settings) -> Vec<IglooTarget>
+	/// This function is labeled .._from_config, but the project contains
+	/// the environment vars (from &Igloo) and config already
+	pub fn get_targets_from_config(prj: &IglooProject) -> Vec<IglooTarget>
 	{
 		let mut _targets: Vec<IglooTarget> = Vec::new();
-		for target in config.profile.targets.iter()
+		for target in prj.config.profile.targets.iter()
 		{
-			_targets.push(IglooTarget::target_from_name(igloo, String::from(target)).unwrap());
+			_targets.push(IglooTarget::target_from_name(prj.igloo, String::from(target)).unwrap());
 		}
 		_targets
 	}
@@ -96,7 +109,7 @@ pub struct IglooProject<'a>
 {
 	pub igloo: &'a Igloo,
 	pub config: Settings,
-	targets: Vec::<IglooTarget>,
+	pub targets: Vec::<IglooTarget>,
 	pub root: std::path::PathBuf,
 }
 
@@ -133,17 +146,15 @@ impl<'a> IglooProject<'a>
 	/// igloo run, push, pull, erase, etc... are called
 	pub fn from_existing(igloo_in: &'a Igloo) -> Result<IglooProject, IglooStatus>
 	{
-		let _config = Settings::default().from_project_file(igloo_in).unwrap();
-		let _targets = Settings::get_targets_from_config(igloo_in, &_config);
-		let _root = igloo_in.env.cwd.join(&_config.profile.name);
-		let ret_project = IglooProject
-		{
-			igloo: igloo_in,
-			config: _config,
-			targets: _targets,
-			root: _root,
-		};
-		Ok(IglooProject::default(igloo_in))
+		// These vars need to be acquired in this order when creating a project from an existing project
+		// The config requires the &Igloo
+		// targets requires config and &Igloo
+		// root just requires the project name, but its best to do it last to make sure everything else is valid
+		let mut ret_project = IglooProject::default(igloo_in);
+		ret_project.config = Settings::from_project_file(&ret_project).unwrap();
+		ret_project.targets = Settings::get_targets_from_config(&ret_project);
+		ret_project.root = igloo_in.env.cwd.join(&ret_project.config.profile.name);
+		Ok(ret_project)
 	}
 
 	pub fn is_igloo_prj(path: &std::path::PathBuf) -> bool
@@ -170,25 +181,37 @@ impl<'a> IglooProject<'a>
 		// so i can make changes to active dir and still have my project root if i need it
 		// so far i havent needed it so i may just remove this
 
-		let active_dir = std::path::PathBuf::new().join(&self.config.profile.name);
+		let active_dir = self.root.clone();
 		// create new project directory
 		match std::fs::create_dir(&active_dir)
 		{
 			Err(e) =>
 			{
-				println!("{:?}", e);
-				return IS_BAD
+				ret = IS_FAILED_TO_CREATE_DIR;
+				igloo_debug!(ERROR, ret, "Failed to create dir: {:?} | {:?}", &active_dir, e);
+				return ret
 			}
 			_ => (),
 		}
 
 		// create igloo directory
+		match std::fs::create_dir(&active_dir.clone().join("igloo"))
+		{
+			Err(e) =>
+			{
+				ret = IS_FAILED_TO_CREATE_DIR;
+				igloo_debug!(ERROR, ret, "Failed to create dir: {:?} | {:?}", &active_dir.clone().join("igloo"), e);
+				return ret
+			}
+			_ => (),
+		}
 		match std::fs::create_dir(&active_dir.clone().join("inc"))
 		{
 			Err(e) =>
 			{
-				println!("{:?}", e);
-				return IS_BAD
+				ret = IS_FAILED_TO_CREATE_DIR;
+				igloo_debug!(ERROR, ret, "Failed to create dir: {:?} | {:?}", &active_dir.clone().join("inc"), e);
+				return ret
 			}
 			_ => (),
 		}
@@ -198,8 +221,9 @@ impl<'a> IglooProject<'a>
 		{
 			Err(e) =>
 			{
-				println!("{:?}", e);
-				return IS_BAD
+				ret = IS_FAILED_TO_CREATE_DIR;
+				igloo_debug!(ERROR, ret, "Failed to create dir: {:?} | {:?}", &active_dir.clone().join("src"), e);
+				return ret
 			}
 			_ => (),
 		}
@@ -208,8 +232,9 @@ impl<'a> IglooProject<'a>
 		{
 			Err(e) =>
 			{
-				println!("{:?}", e);
-				return IS_BAD
+				ret = IS_FAILED_TO_CREATE_DIR;
+				igloo_debug!(ERROR, ret, "Failed to create dir: {:?} | {:?}", &active_dir.clone().join("cfg"), e);
+				return ret
 			}
 			_ => (),
 		}
@@ -218,40 +243,32 @@ impl<'a> IglooProject<'a>
 		{
 			Err(e) =>
 			{
-				println!("{:?}", e);
-				return IS_BAD
+				ret = IS_FAILED_TO_CREATE_DIR;
+				igloo_debug!(ERROR, ret, "Failed to create dir: {:?} | {:?}", &active_dir.clone().join("esf"), e);
+				return ret
 			}
 			_ => (),
 		}
 
 		// project folders finished
+		// create project settings file (igloo.toml)
+		ret = self.generate_project_config();
+		if ret != IS_GOOD
+		{
+			igloo_debug!(WARNING, ret);
+			return ret
+		}
+
 		// now do target folders
 		ret = self.generate_targets();
 		if ret != IS_GOOD
 		{
+			igloo_debug!(WARNING, ret);
 			return ret
 		}
 
-		ret = self.generate_igloo_header();
-		if ret != IS_GOOD
-		{
-			return ret
-		}
-
-		ret = self.generate_igloo_main();
-		if ret != IS_GOOD
-		{
-			return ret
-		}
 
 		return ret
-	}
-
-	pub fn add_target_to_config(&mut self, target: String) -> IglooStatus
-	{
-		let mut ret = IS_GOOD;
-		self.config.add_target(target);
-		ret
 	}
 
 	fn generate_targets(&self) -> IglooStatus
@@ -265,11 +282,18 @@ impl<'a> IglooProject<'a>
 
 	pub fn generate_igloo_header(&self) -> IglooStatus
 	{
-		IS_BAD
+		IS_GOOD
 	}
 
 	pub fn generate_igloo_main(&self) -> IglooStatus
 	{
 		IS_GOOD
+	}
+
+	pub fn generate_project_config(&self) -> IglooStatus
+	{
+		let mut ret = IS_GOOD;
+		Settings::to_project_file(self);
+		ret
 	}
 }

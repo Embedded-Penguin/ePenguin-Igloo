@@ -13,17 +13,14 @@
 // I could make the deserialization work by default by adding a billion different
 // structs, but this is honestly just a trash way of doing it and I think the idea
 // of doing it that way is only an ideal solution. It isn't very practical.
+use igloo_util::*;
 use crate::Igloo;
-use crate::IglooStatus;
-use crate::IglooStatus::*;
 use crate::IglooProject;
 use serde::{Serialize, Deserialize};
-use config::Config;
-use std::fs::{OpenOptions, File};
 use std::vec::Vec;
-use std::io::prelude::*;
-use std::path::PathBuf;
-use std::collections::HashMap;
+use igloo_util::IglooDebugSeverity::*;
+use igloo_util::IglooStatus::{self, *};
+use igloo_util::TRACE_LEVEL;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct IglooTarget
@@ -40,7 +37,7 @@ pub struct IglooTarget
 
 impl IglooTarget
 {
-	fn default() -> IglooTarget
+	fn _default() -> IglooTarget
 	{
 		IglooTarget
 		{
@@ -59,20 +56,46 @@ impl IglooTarget
 	/// deserializes the targets manifest file and creates the target
 	pub fn target_from_name(igloo: &Igloo, name: String) -> Result<IglooTarget, IglooStatus>
 	{
-		let target_path = &igloo.master_target_manifest.targets[&name];
-		let mut target_config = config::Config::default();
-		target_config.merge(
-			config::File::with_name(
-				igloo.env
-					.esfd
-					.clone()
-					.join(&target_path)
-					.to_str().unwrap()
-			)).unwrap();
+		let target_path = igloo
+			.env
+			.esfd
+			.clone()
+			.join(&igloo.master_target_manifest.targets[&name]);
 
-		let mut target_table: config::Value = target_config.get("esf").unwrap();
+		// We have to read in the file first so we can replace all variables with values
+		let targ_templ = match std::fs::read_to_string(&target_path)
+		{
+			Ok(v) => v,
+			Err(e) =>
+			{
+				igloo_debug!(ERROR,
+						  IS_BAD,
+						  "Failed to read {} | Error: {:?}",
+						  &target_path.to_str().unwrap(),
+							 e);
+				return Err(IS_BAD)
+			}
+		};
+
+		// replace all variables
+		// this will be expanded on later and more variables will be added
+		let final_targ_str = targ_templ.replace("${TARGET}", &name);
+
+		// create config from our string
+		let mut target_config: config::Config = config::Config::default();
+		target_config.merge(
+			config::File::from_str(
+				&final_targ_str, config::FileFormat::Toml)).unwrap();
+
+		// get [esf] (which is technically a table...) from our config
+		let target_table: config::Value = target_config.get("esf").unwrap();
+
+		// turn it into an IglooTarget
 		let ret_target = target_table.try_into::<IglooTarget>().unwrap();
-		println!("{:?}", ret_target);
+		igloo_debug!(INFO,
+					 IS_NONE,
+					 "Found Igloo target and deserialized it: {:?}",
+					 ret_target);
 
 
 		Ok(ret_target)
