@@ -47,6 +47,7 @@ pub enum IglooDebugSeverity
 	INFO = 4,
 }
 
+pub static TRACE_LEVEL: IglooDebugSeverity = IglooDebugSeverity::TRACE;
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum IglooStatus
@@ -64,7 +65,6 @@ pub enum IglooStatus
 	IS_NONE = 								0xFF,
 }
 
-pub static TRACE_LEVEL: IglooDebugSeverity = IglooDebugSeverity::TRACE;
 
 #[macro_export]
 macro_rules! igloo_debug

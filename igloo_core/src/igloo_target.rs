@@ -41,7 +41,7 @@ pub struct IglooTargetConfig
 pub struct IglooTarget
 {
 	root: std::path::PathBuf,
-	makefile: HashMap<String, config::Value>,
+	makeopts: HashMap<String, config::Value>,
 	config: IglooTargetConfig,
 }
 
@@ -69,7 +69,7 @@ impl IglooTarget
 		IglooTarget
 		{
 			root: std::path::PathBuf::default(),
-			makefile: HashMap::new(),
+			makeopts: HashMap::new(),
 			config: IglooTargetConfig::_default(),
 		}
 	}
@@ -124,7 +124,7 @@ impl IglooTarget
 				.join("targets")
 				.join(&name),
 			config: ret_target_config,
-			makefile: HashMap::new(),
+			makeopts: HashMap::new(),
 		};
 		ret_target.collect_makefile(prj);
 		igloo_debug!(INFO,
@@ -178,12 +178,13 @@ impl IglooTarget
 			.open(target_root.join("Makefile"))
 			.unwrap();
 		//
-		writeln!(app_file, "# ePenguin Generated Variables").unwrap();
+		writeln!(app_file, "## ePenguin Generated Makefile").unwrap();
 		writeln!(app_file, "PROJECT_NAME={}", project.config.profile.name).unwrap();
 		writeln!(app_file, "TARGET_NAME={}", self.config.name).unwrap();
 
 		loop
 		{
+			write!(app_file, "\n## Toolchain Variables").unwrap();
 			ret = self.makefile_write_var(
 				"TOOLCHAIN",
 				&mut app_file);
@@ -207,6 +208,94 @@ impl IglooTarget
 			}
 
 			ret = self.makefile_write_var(
+				"OBJCOPY",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			ret = self.makefile_write_var(
+				"OBJDUMP",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			ret = self.makefile_write_var(
+				"GDB",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			ret = self.makefile_write_var(
+				"SIZE",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			ret = self.makefile_write_var(
+				"AS",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			writeln!(app_file, "").unwrap();
+
+			// Now we write some mcu specifics
+			write!(app_file, "\n## MCU Specific Variables").unwrap();
+			ret = self.makefile_write_var(
+				"MCPU",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			ret = self.makefile_write_var(
+				"MCU",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			ret = self.makefile_write_var(
+				"LD_PATH",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			ret = self.makefile_write_var(
+				"LD_SCRIPT",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			writeln!(app_file, "").unwrap();
+
+			// Write out our compiler flags
+			writeln!(app_file, "## Compiler Flags").unwrap();
+			ret = self.makefile_write_var(
+				"CFLAGS",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			ret = self.makefile_write_var(
 				"ELF_FLAGS",
 				&mut app_file);
 			if ret != IS_GOOD
@@ -214,693 +303,143 @@ impl IglooTarget
 				break;
 			}
 
+			ret = self.makefile_write_var(
+				"HEX_FLAGS",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			ret = self.makefile_write_var(
+				"EEP_FLAGS",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			// Write mkdir compatibility
+			ret = self.makefile_write_compatibility_mkdir(&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			ret = self.makefile_write_var(
+				"SUB_DIRS",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+
+			writeln!(app_file, "").unwrap();
+			ret = self.makefile_write_var(
+				"OBJS",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			writeln!(app_file, "").unwrap();
+			ret = self.makefile_write_var(
+				"OBJS_AS_ARGS",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			writeln!(app_file, "").unwrap();
+			ret = self.makefile_write_var(
+				"DIR_INCLUDES",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			writeln!(app_file, "").unwrap();
+			ret = self.makefile_write_var(
+				"DEPS",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			writeln!(app_file, "").unwrap();
+			ret = self.makefile_write_var(
+				"DEPS_AS_ARGS",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			writeln!(app_file, "\nvpath %.c ../../../").unwrap();
+			writeln!(app_file, "vpath %.s ../../../").unwrap();
+			writeln!(app_file, "vpath %.S ../../../\n").unwrap();
+			writeln!(app_file, ".PHONY: debug push clean\n").unwrap();
+
+
+			// Write core rules
+			// These rules+vars must exist, NOT OPTIONAL
+			ret = self.makefile_core_write_rules(&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			ret = self.makefile_write_compiler_targets(&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			// Write specific rules (clean, push, debug)
+			ret = self.makefile_write_rule_clean(&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			writeln!(app_file, "").unwrap();
+			ret = self.makefile_write_rule_push(&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			writeln!(app_file, "").unwrap();
+			ret = self.makefile_write_rule_debug(&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			writeln!(app_file, "\n\nQUOTE:=\"").unwrap();
 		break;}
-		writeln!(app_file, "\n\nQUOTE:=\"").unwrap();
+
+		if ret != IS_GOOD
+		{
+			igloo_debug!(ERROR, ret, "Failed to write some var to the makefile for target {}", self.config.name);
+		}
 		ret
 	}
-	/*	
-
-
-		match project.igloo.master_make_manifest.get("OBJCOPY")
-		{
-			None =>
-			{
-				println!("OBJCOPY Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "OBJCOPY=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
-		match project.igloo.master_make_manifest.get("OBJDUMP")
-		{
-			None =>
-			{
-				println!("OBJDUMP Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "OBJDUMP=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
-		match project.igloo.master_make_manifest.get("GDB")
-		{
-			None =>
-			{
-				println!("GDB Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "GDB=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
-		match project.igloo.master_make_manifest.get("SIZE")
-		{
-			None =>
-			{
-				println!("SIZE Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "SIZE=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
-		match project.igloo.master_make_manifest.get("AS")
-		{
-			None =>
-			{
-				println!("AS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "AS=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
-		writeln!(app_file, "\n").unwrap();
-
-		// MCU Specifics now
-		match project.igloo.master_make_manifest.get("MCPU")
-		{
-			None =>
-			{
-				println!("MCPU Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "MCPU=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
-		match project.igloo.master_make_manifest.get("MCU")
-		{
-			None =>
-			{
-				println!("MCU Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "MCU=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
-		match project.igloo.master_make_manifest.get("LD_PATH")
-		{
-			None =>
-			{
-				println!("LD_PATH Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "LD_PATH=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
-		match project.igloo.master_make_manifest.get("LD_SCRIPT")
-		{
-			None =>
-			{
-				println!("LD_SCRIPT Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "LD_SCRIPT=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
-
-		writeln!(app_file, "\n").unwrap();
-
-		// CFLAGS
-		match project.igloo.master_make_manifest.get("CFLAGS")
-		{
-			None =>
-			{
-				println!("CFLAGS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "CFLAGS=").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, " \\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-		writeln!(app_file, "\n").unwrap();
-		// ELF FLAGS
-		match project.igloo.master_make_manifest.get("ELF_FLAGS")
-		{
-			None =>
-			{
-				println!("ELF_FLAGS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "ELF_FLAGS=").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, " \\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-		writeln!(app_file, "\n").unwrap();
-		// HEX FLAGS
-		match project.igloo.master_make_manifest.get("HEX_FLAGS")
-		{
-			None =>
-			{
-				println!("HEX_FLAGS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "HEX_FLAGS=").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, " \\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-
-		writeln!(app_file, "\n").unwrap();
-		match project.igloo.master_make_manifest.get("EEP_FLAGS")
-		{
-			None =>
-			{
-				println!("EEP_FLAGS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "EEP_FLAGS=").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, " \\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-
-		writeln!(app_file, "\n").unwrap();
-		// Write SystemRoot config stuff for cross compatibility
-		let sysroot: String = String::from("
-ifdef SystemRoot
-	SHELL = cmd.exe
-	MK_DIR = mkdir
-else
-	ifeq ($(shell uname), Linux)
-		MK_DIR = mkdir -p
-	endif
-
-	ifeq ($(shell uname | cut -d _ -f 1), CYGWIN)
-		MK_DIR = mkdir -p
-	endif
-
-	ifeq ($(shell uname | cut -d _ -f 1), MINGW32)
-	MK_DIR = mkdir -p
-	endif
-
-	ifeq ($(shell uname | cut -d _ -f 1), MINGW64)
-	MK_DIR = mkdir -p
-	endif
-
-	ifeq ($(shell uname | cut -d _ -f 1), DARWIN)
-	MK_DIR = mkdir -p
-	endif
-endif");
-
-		writeln!(app_file, "{}", sysroot).unwrap();
-		match project.igloo.master_make_manifest.get("SUB_DIRS")
-		{
-			None =>
-			{
-				println!("SUB_DIRS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "SUB_DIRS+=").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, " \\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-
-		writeln!(app_file, "\n").unwrap();
-		match project.igloo.master_make_manifest.get("OBJS")
-		{
-			None =>
-			{
-				println!("OBJS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "OBJS+=").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, " \\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-
-		writeln!(app_file, "\n").unwrap();
-		match project.igloo.master_make_manifest.get("OBJS_AS_ARGS")
-		{
-			None =>
-			{
-				println!("OBJS_AS_ARGS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "OBJS_AS_ARGS+=").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, " \\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-
-		writeln!(app_file, "\n").unwrap();
-		match project.igloo.master_make_manifest.get("DIR_INCLUDES")
-		{
-			None =>
-			{
-				println!("DIR_INCLUDES Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "DIR_INCLUDES+=").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, " \\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-
-		write!(app_file, "\n\n").unwrap();
-		match project.igloo.master_make_manifest.get("DEPS")
-		{
-			None =>
-			{
-				println!("DEPS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "DEPS:=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
-
-		write!(app_file, "\n").unwrap();
-		match project.igloo.master_make_manifest.get("DEPS_AS_ARGS")
-		{
-			None =>
-			{
-				println!("DEPS_AS_ARGS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "DEPS_AS_ARGS:=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
-
-		writeln!(app_file, "\nvpath %.c ../../../").unwrap();
-		writeln!(app_file, "vpath %.s ../../../").unwrap();
-		writeln!(app_file, "vpath %.S ../../../\n").unwrap();
-
-		writeln!(app_file, ".PHONY: debug clean\n").unwrap();
-
-		match project.igloo.master_make_manifest.get("ALL_PREREQS")
-		{
-			None =>
-			{
-				println!("ALL_PREREQS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "all:").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, "\\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-		match project.igloo.master_make_manifest.get("ALL_CMDS")
-		{
-			None =>
-			{
-				println!("ALL_CMDS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "\n").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, "\t{}", cflag).unwrap();
-				}
-			},
-		}
-
-		write!(app_file, "\n\n").unwrap();
-		match project.igloo.master_make_manifest.get("ELF_TARGET_PREREQS")
-		{
-			None =>
-			{
-				println!("ELF_TARGET_PREREQS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "$(PROJECT_NAME).elf:").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, "\\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-
-		match project.igloo.master_make_manifest.get("ELF_TARGET_CMDS")
-		{
-			None =>
-			{
-				println!("ELF_TARGET_CMDS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "\n").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, "\t{}", cflag).unwrap();
-				}
-			},
-		}
-
-		write!(app_file, "\n\n").unwrap();
-		match project.igloo.master_make_manifest.get("BIN_TARGET_PREREQS")
-		{
-			None =>
-			{
-				println!("BIN_TARGET_PREREQS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "$(PROJECT_NAME).bin:").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, "\\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-
-		match project.igloo.master_make_manifest.get("BIN_TARGET_CMDS")
-		{
-			None =>
-			{
-				println!("BIN_TARGET_CMDS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "\n").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, "\t{}", cflag).unwrap();
-				}
-			},
-		}
-
-		write!(app_file, "\n\n").unwrap();
-		match project.igloo.master_make_manifest.get("HEX_TARGET_PREREQS")
-		{
-			None =>
-			{
-				println!("HEX_TARGET_PREREQS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "$(PROJECT_NAME).hex:").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, "\\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-
-		match project.igloo.master_make_manifest.get("HEX_TARGET_CMDS")
-		{
-			None =>
-			{
-				println!("HEX_TARGET_CMDS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "\n").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, "\t{}", cflag).unwrap();
-				}
-			},
-		}
-		write!(app_file, "\n\n").unwrap();
-		match project.igloo.master_make_manifest.get("EEP_TARGET_PREREQS")
-		{
-			None =>
-			{
-				println!("EEP_TARGET_PREREQS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "$(PROJECT_NAME).eep:").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, "\\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-
-		match project.igloo.master_make_manifest.get("EEP_TARGET_CMDS")
-		{
-			None =>
-			{
-				println!("EEP_TARGET_CMDS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "\n").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, "\t{}", cflag).unwrap();
-				}
-			},
-		}
-		write!(app_file, "\n\n").unwrap();
-		match project.igloo.master_make_manifest.get("LSS_TARGET_PREREQS")
-		{
-			None =>
-			{
-				println!("LSS_TARGET_PREREQS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "$(PROJECT_NAME).lss:").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, "\\").unwrap();
-					write!(app_file, "{}", cflag).unwrap();
-				}
-			},
-		}
-
-		match project.igloo.master_make_manifest.get("LSS_TARGET_CMDS")
-		{
-			None =>
-			{
-				println!("LSS_TARGET_CMDS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "\n").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					writeln!(app_file, "\t{}", cflag).unwrap();
-				}
-			},
-		}
-
-		// Compiler Targets
-		writeln!(app_file, "").unwrap();
-		writeln!(app_file, "
-# Compiler targets
-%.o: %.c
-	@echo Building file: $<
-	@echo ARM/GNU C Compiler
-	$(QUOTE)$(CC)$(QUOTE) $(CFLAGS) -o $(QUOTE)$@$(QUOTE) $(QUOTE)$<$(QUOTE)
-	@echo Finished building: $<").unwrap();
-		writeln!(app_file, "
-%.o: %.s
-	@echo Building file: $<
-	@echo ARM/GNU Assembler
-	$(QUOTE)$(AS)$(QUOTE) $(CFLAGS) -o $(QUOTE)$@$(QUOTE) $(QUOTE)$<$(QUOTE)
-	@echo Finished building: $<").unwrap();
-		writeln!(app_file, "
-%.o: %.S
-	@echo Building file: $<
-	@echo ARM/GNU Preprocessing Assembler
-	$(QUOTE)$(CC)$(QUOTE) $(CFLAGS) -o $(QUOTE)$@$(QUOTE) $(QUOTE)$<$(QUOTE)
-	@echo Finished building: $<").unwrap();
-
-
-		writeln!(app_file, "\n").unwrap();
-		writeln!(app_file, "$(SUB_DIRS):\n\t$(MK_DIR) $(QUOTE)$@$(QUOTE)").unwrap();
-		writeln!(app_file, "
-ifneq ($(MAKECMDGOALS),clean)
-ifneq ($(strip $(DEPS)),)
--include $(DEPS)
-endif
-endif\n").unwrap();
-
-		match project.igloo.master_make_manifest.get("CLEAN_PREREQS")
-		{
-			None =>
-			{
-				println!("CLEAN_TARGET_PREREQS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "clean:").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					if !cflag.to_string().is_empty()
-					{
-						writeln!(app_file, "\\").unwrap();
-						write!(app_file, "{}", cflag).unwrap()
-					}
-				}
-			},
-		}
-
-		match project.igloo.master_make_manifest.get("CLEAN_CMDS")
-		{
-			None =>
-			{
-				println!("CLEAN_CMDS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "\n").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					if !cflag.to_string().is_empty()
-					{
-						writeln!(app_file, "\t{}", cflag).unwrap()
-					}
-				}
-			},
-		}
-
-		writeln!(app_file, "\n").unwrap();
-		match project.igloo.master_make_manifest.get("DEBUG_PREREQS")
-		{
-			None =>
-			{
-				println!("DEBUG_PREREQS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "debug:").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					if !cflag.to_string().is_empty()
-					{
-						writeln!(app_file, "\\").unwrap();
-						write!(app_file, "{}", cflag).unwrap()
-					}
-				}
-			},
-		}
-
-		match project.igloo.master_make_manifest.get("DEBUG_CMDS")
-		{
-			None =>
-			{
-				println!("DEBUG_CMDS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "\n").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					if !cflag.to_string().is_empty()
-					{
-						writeln!(app_file, "\t{}", cflag).unwrap()
-					}
-				}
-			},
-		}
-
-		writeln!(app_file, "\n").unwrap();
-		match project.igloo.master_make_manifest.get("PUSH_PREREQS")
-		{
-			None =>
-			{
-				println!("PUSH_PREREQS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "push:").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					if !cflag.to_string().is_empty()
-					{
-						writeln!(app_file, "\\").unwrap();
-						write!(app_file, "{}", cflag).unwrap()
-					}
-				}
-			},
-		}
-
-		match project.igloo.master_make_manifest.get("PUSH_CMDS")
-		{
-			None =>
-			{
-				println!("PUSH_CMDS Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "\n").unwrap();
-				for cflag in v.clone().into_array().unwrap()
-				{
-					if !cflag.to_string().is_empty()
-					{
-						writeln!(app_file, "\t{}", cflag).unwrap()
-					}
-				}
-			},
-		}
-
-		*/
 
 	fn makefile_write_var(&self,
 						  name: &str,
 						  makefile: &mut std::fs::File) -> IglooStatus
 	{
 		let mut ret: IglooStatus = IS_GOOD;
-		println!("PRINTING MAKEFILE {:?}", self.makefile);
-		match self.makefile.get(name)
+		igloo_debug!(INFO, IS_NONE, "Writing var {} to makefile at {}",
+					 name,
+					 self.root.join("Makefile").to_str().unwrap());
+		match self.makeopts.get(name)
 		{
 			None =>
 			{
@@ -932,29 +471,481 @@ endif\n").unwrap();
 		ret
 	}
 
-	// fn makefile_write_rule(targ: &str, makefile_manifest: &config::Config, makefile: &std::fs::File)
-	// {
+	// This is just so mkdir is compatible with multiple systems
+	fn makefile_write_compatibility_mkdir(&self, makefile: &mut std::fs::File) -> IglooStatus
+	{
+		let mut ret = IS_GOOD;
+		let sysroot: String = String::from("\n
+ifdef SystemRoot
+	SHELL = cmd.exe
+	MK_DIR = mkdir
+else
+	ifeq ($(shell uname), Linux)
+		MK_DIR = mkdir -p
+	endif
 
-	// 	match project.igloo.master_make_manifest.get("PUSH_CMDS")
-	// 	{
-	// 		None =>
-	// 		{
-	// 			println!("PUSH_CMDS Not found");
-	// 		}
-	// 		Some(v) =>
-	// 		{
-	// 			write!(app_file, "\n").unwrap();
-	// 			for cflag in v.clone().into_array().unwrap()
-	// 			{
-	// 				if !cflag.to_string().is_empty()
-	// 				{
-	// 					writeln!(app_file, "\t{}", cflag).unwrap()
-	// 				}
-	// 			}
-	// 		},
-	// 	}
-	// }
+	ifeq ($(shell uname | cut -d _ -f 1), CYGWIN)
+		MK_DIR = mkdir -p
+	endif
 
+	ifeq ($(shell uname | cut -d _ -f 1), MINGW32)
+	MK_DIR = mkdir -p
+	endif
+
+	ifeq ($(shell uname | cut -d _ -f 1), MINGW64)
+	MK_DIR = mkdir -p
+	endif
+
+	ifeq ($(shell uname | cut -d _ -f 1), DARWIN)
+	MK_DIR = mkdir -p
+	endif
+endif");
+
+		// need to handle these unwraps eventually
+		writeln!(makefile, "{}", sysroot).unwrap();
+
+		ret
+	}
+
+
+	// Write all makefile rules
+	// Eventually this will be moved into a write_makefile_rule(x) where x is the rule to be written
+	// I don't know how I want to structure that yet so for now we're just writing them all at once
+	// as hardcoded rules
+	fn makefile_core_write_rules(&self, makefile: &mut std::fs::File) -> IglooStatus
+	{
+		let mut ret = IS_GOOD;
+		writeln!(makefile, "").unwrap();
+
+		let mut makevar: &str;
+		loop
+		{
+			// Writing all rule
+			makevar = "ALL_PREREQS";
+			match self.makeopts.get(makevar)
+			{
+				None =>
+				{
+					ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+					break;
+				}
+				Some(v) =>
+				{
+					write!(makefile, "all:").unwrap();
+					for cflag in v.clone().into_array().unwrap()
+					{
+						writeln!(makefile, "\\").unwrap();
+						write!(makefile, "{}", cflag).unwrap();
+					}
+				},
+			}
+			makevar = "ALL_CMDS";
+			match self.makeopts.get(makevar)
+			{
+				None =>
+				{
+					ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+					break;
+				}
+				Some(v) =>
+				{
+					write!(makefile, "\n").unwrap();
+					for cflag in v.clone().into_array().unwrap()
+					{
+						writeln!(makefile, "\t{}", cflag).unwrap();
+					}
+				},
+			}
+
+			// Writing $(PROJECT_NAME).elf rule
+			write!(makefile, "\n\n").unwrap();
+			makevar = "ELF_TARGET_PREREQS";
+			match self.makeopts.get(makevar)
+			{
+				None =>
+				{
+					ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+					break;
+				}
+				Some(v) =>
+				{
+					write!(makefile, "$(PROJECT_NAME).elf:").unwrap();
+					for cflag in v.clone().into_array().unwrap()
+					{
+						writeln!(makefile, "\\").unwrap();
+						write!(makefile, "{}", cflag).unwrap();
+					}
+				},
+			}
+
+			makevar = "ELF_TARGET_CMDS";
+			match self.makeopts.get(makevar)
+			{
+				None =>
+				{
+					ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+					break;
+				}
+				Some(v) =>
+				{
+					write!(makefile, "\n").unwrap();
+					for cflag in v.clone().into_array().unwrap()
+					{
+						writeln!(makefile, "\t{}", cflag).unwrap();
+					}
+				},
+			}
+
+			write!(makefile, "\n\n").unwrap();
+			makevar = "BIN_TARGET_PREREQS";
+			match self.makeopts.get(makevar)
+			{
+				None =>
+				{
+					ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+					break;
+				}
+				Some(v) =>
+				{
+					write!(makefile, "$(PROJECT_NAME).bin:").unwrap();
+					for cflag in v.clone().into_array().unwrap()
+					{
+						writeln!(makefile, "\\").unwrap();
+						write!(makefile, "{}", cflag).unwrap();
+					}
+				},
+			}
+
+			makevar = "BIN_TARGET_CMDS";
+			match self.makeopts.get(makevar)
+			{
+				None =>
+				{
+					ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+					break;
+				}
+				Some(v) =>
+				{
+					write!(makefile, "\n").unwrap();
+					for cflag in v.clone().into_array().unwrap()
+					{
+						writeln!(makefile, "\t{}", cflag).unwrap();
+					}
+				},
+			}
+
+			write!(makefile, "\n\n").unwrap();
+			makevar = "HEX_TARGET_PREREQS";
+			match self.makeopts.get(makevar)
+			{
+				None =>
+				{
+					ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+					break;
+				}
+				Some(v) =>
+				{
+					write!(makefile, "$(PROJECT_NAME).hex:").unwrap();
+					for cflag in v.clone().into_array().unwrap()
+					{
+						writeln!(makefile, "\\").unwrap();
+						write!(makefile, "{}", cflag).unwrap();
+					}
+				},
+			}
+
+			makevar = "HEX_TARGET_CMDS";
+			match self.makeopts.get(makevar)
+			{
+				None =>
+				{
+					ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+					break;
+				}
+				Some(v) =>
+				{
+					write!(makefile, "\n").unwrap();
+					for cflag in v.clone().into_array().unwrap()
+					{
+						writeln!(makefile, "\t{}", cflag).unwrap();
+					}
+				},
+			}
+
+			write!(makefile, "\n\n").unwrap();
+			makevar = "EEP_TARGET_PREREQS";
+			match self.makeopts.get(makevar)
+			{
+				None =>
+				{
+					ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+					break;
+				}
+				Some(v) =>
+				{
+					write!(makefile, "$(PROJECT_NAME).eep:").unwrap();
+					for cflag in v.clone().into_array().unwrap()
+					{
+						writeln!(makefile, "\\").unwrap();
+						write!(makefile, "{}", cflag).unwrap();
+					}
+				},
+			}
+
+			makevar = "EEP_TARGET_CMDS";
+			match self.makeopts.get(makevar)
+			{
+				None =>
+				{
+					ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+					break;
+				}
+				Some(v) =>
+				{
+					write!(makefile, "\n").unwrap();
+					for cflag in v.clone().into_array().unwrap()
+					{
+						writeln!(makefile, "\t{}", cflag).unwrap();
+					}
+				},
+			}
+
+			write!(makefile, "\n\n").unwrap();
+			makevar = "LSS_TARGET_PREREQS";
+			match self.makeopts.get(makevar)
+			{
+				None =>
+				{
+					ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+					break;
+				}
+				Some(v) =>
+				{
+					write!(makefile, "$(PROJECT_NAME).lss:").unwrap();
+					for cflag in v.clone().into_array().unwrap()
+					{
+						writeln!(makefile, "\\").unwrap();
+						write!(makefile, "{}", cflag).unwrap();
+					}
+				},
+			}
+
+			makevar = "LSS_TARGET_CMDS";
+			match self.makeopts.get(makevar)
+			{
+				None =>
+				{
+					ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+					break;
+				}
+				Some(v) =>
+				{
+					write!(makefile, "\n").unwrap();
+					for cflag in v.clone().into_array().unwrap()
+					{
+						writeln!(makefile, "\t{}", cflag).unwrap();
+					}
+				},
+			}
+
+		break;}
+
+		if ret != IS_GOOD
+		{
+			igloo_debug!(ERROR, ret, "Failed to extract make var {}", makevar);
+		}
+		ret
+	}
+
+	fn makefile_write_compiler_targets(&self, makefile: &mut std::fs::File) -> IglooStatus
+	{
+		let mut ret = IS_GOOD;
+
+		// Compiler Targets
+		writeln!(makefile, "\n
+# Compiler targets
+%.o: %.c
+	@echo Building file: $<
+	@echo ARM/GNU C Compiler
+	$(QUOTE)$(CC)$(QUOTE) $(CFLAGS) -o $(QUOTE)$@$(QUOTE) $(QUOTE)$<$(QUOTE)
+	@echo Finished building: $<").unwrap();
+		writeln!(makefile, "
+%.o: %.s
+	@echo Building file: $<
+	@echo ARM/GNU Assembler
+	$(QUOTE)$(AS)$(QUOTE) $(CFLAGS) -o $(QUOTE)$@$(QUOTE) $(QUOTE)$<$(QUOTE)
+	@echo Finished building: $<").unwrap();
+		writeln!(makefile, "
+%.o: %.S
+	@echo Building file: $<
+	@echo ARM/GNU Preprocessing Assembler
+	$(QUOTE)$(CC)$(QUOTE) $(CFLAGS) -o $(QUOTE)$@$(QUOTE) $(QUOTE)$<$(QUOTE)
+	@echo Finished building: $<").unwrap();
+
+
+		writeln!(makefile, "\n").unwrap();
+		writeln!(makefile, "$(SUB_DIRS):\n\t$(MK_DIR) $(QUOTE)$@$(QUOTE)").unwrap();
+		writeln!(makefile, "
+ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(strip $(DEPS)),)
+-include $(DEPS)
+endif
+endif\n").unwrap();
+		ret
+	}
+
+	fn makefile_write_rule_clean(&self, makefile: &mut std::fs::File) -> IglooStatus
+	{
+		let mut ret = IS_GOOD;
+
+		let mut makevar: &str = "CLEAN_PREREQS";
+
+		match self.makeopts.get(makevar)
+		{
+			None =>
+			{
+				ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+				igloo_debug!(ERROR, ret, "Failed to extract makevar {}", makevar);
+				return ret;
+			}
+			Some(v) =>
+			{
+				write!(makefile, "clean:").unwrap();
+				for cflag in v.clone().into_array().unwrap()
+				{
+					if !cflag.to_string().is_empty()
+					{
+						writeln!(makefile, "\\").unwrap();
+						write!(makefile, "{}", cflag).unwrap()
+					}
+				}
+			},
+		}
+
+		makevar = "CLEAN_CMDS";
+		match self.makeopts.get(makevar)
+		{
+			None =>
+			{
+				ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+				igloo_debug!(ERROR, ret, "Failed to extract makevar {}", makevar);
+				return ret;
+			}
+			Some(v) =>
+			{
+				write!(makefile, "\n").unwrap();
+				for cflag in v.clone().into_array().unwrap()
+				{
+					if !cflag.to_string().is_empty()
+					{
+						writeln!(makefile, "\t{}", cflag).unwrap()
+					}
+				}
+			},
+		}
+		ret
+	}
+
+	fn makefile_write_rule_push(&self, makefile: &mut std::fs::File) -> IglooStatus
+	{
+		let mut ret = IS_GOOD;
+		let mut makevar: &str = "PUSH_PREREQS";
+
+		match self.makeopts.get(makevar)
+		{
+			None =>
+			{
+				ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+				igloo_debug!(ERROR, ret, "Failed to extract makevar {}", makevar);
+				return ret;
+			}
+			Some(v) =>
+			{
+				write!(makefile, "push:").unwrap();
+				for cflag in v.clone().into_array().unwrap()
+				{
+					if !cflag.to_string().is_empty()
+					{
+						writeln!(makefile, "\\").unwrap();
+						write!(makefile, "{}", cflag).unwrap()
+					}
+				}
+			},
+		}
+
+		makevar = "PUSH_CMDS";
+		match self.makeopts.get(makevar)
+		{
+			None =>
+			{
+				ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+				igloo_debug!(ERROR, ret, "Failed to extract makevar {}", makevar);
+				return ret;
+			}
+			Some(v) =>
+			{
+				write!(makefile, "\n").unwrap();
+				for cflag in v.clone().into_array().unwrap()
+				{
+					if !cflag.to_string().is_empty()
+					{
+						writeln!(makefile, "\t{}", cflag).unwrap()
+					}
+				}
+			},
+		}
+		ret
+	}
+
+	fn makefile_write_rule_debug(&self, makefile: &mut std::fs::File) -> IglooStatus
+	{
+		let mut ret = IS_GOOD;
+		let mut makevar: &str = "DEBUG_PREREQS";
+		match self.makeopts.get(makevar)
+		{
+			None =>
+			{
+				ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+				igloo_debug!(ERROR, ret, "Failed to extract makevar {}", makevar);
+				return ret;
+			}
+			Some(v) =>
+			{
+				write!(makefile, "debug:").unwrap();
+				for cflag in v.clone().into_array().unwrap()
+				{
+					if !cflag.to_string().is_empty()
+					{
+						writeln!(makefile, "\\").unwrap();
+						write!(makefile, "{}", cflag).unwrap()
+					}
+				}
+			},
+		}
+
+		makevar = "DEBUG_CMDS";
+		match self.makeopts.get(makevar)
+		{
+			None =>
+			{
+				ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+				igloo_debug!(ERROR, ret, "Failed to extract makevar {}", makevar);
+				return ret;
+			}
+			Some(v) =>
+			{
+				write!(makefile, "\n").unwrap();
+				for cflag in v.clone().into_array().unwrap()
+				{
+					if !cflag.to_string().is_empty()
+					{
+						writeln!(makefile, "\t{}", cflag).unwrap()
+					}
+				}
+			},
+		}
+		ret
+	}
 	pub fn collect_makefile(&mut self, project: &IglooProject) -> IglooStatus
 	{
 		let mut ret: IglooStatus = IS_GOOD;
@@ -973,16 +964,16 @@ endif\n").unwrap();
 					// I have no idea why I did this in this way. Need to revisit...
 					Err(_e) =>
 					{
-						if !self.makefile.contains_key(&name)
+						if !self.makeopts.contains_key(&name)
 						{
-							self.makefile.insert(name, val);
+							self.makeopts.insert(name, val);
 						}
 						else
 						{
 							let mut newval = val.clone().into_array().unwrap();
-							let mut newvec = self.makefile.get_key_value(&name).unwrap().1.clone().into_array().unwrap();
+							let mut newvec = self.makeopts.get_key_value(&name).unwrap().1.clone().into_array().unwrap();
 							newvec.append(&mut newval);
-							self.makefile.insert(name, config::Value::from(newvec));
+							self.makeopts.insert(name, config::Value::from(newvec));
 						}
 					}
 					Ok(_v) => (),
@@ -1000,4 +991,5 @@ endif\n").unwrap();
 		}
 		ret
 	}
+
 }
