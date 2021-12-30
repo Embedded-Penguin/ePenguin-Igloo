@@ -154,6 +154,28 @@ impl IglooTarget
 					return ret
 				}
 			}
+
+		}
+
+		if !self.root.join("scripts").exists()
+		{
+			// make scripts dir
+			match std::fs::create_dir(&self.root.join("scripts"))
+			{
+				Ok(_v) => (),
+				Err(e) =>
+				{
+					ret = IS_FAILED_TO_CREATE_DIR;
+					igloo_debug!(ERROR, ret, "Failed to create {} -- {}", self.root.join("scripts").to_str().unwrap(), e);
+					return ret
+				}
+			}
+		}
+
+		ret = self.gather_esf_gdb_scripts(project);
+		if ret != IS_GOOD
+		{
+			return ret
 		}
 
 		ret = self.generate_makefile(project);
@@ -944,6 +966,46 @@ endif\n").unwrap();
 				}
 			},
 		}
+		ret
+	}
+
+
+	fn gather_esf_gdb_scripts(&self, project: &IglooProject) -> IglooStatus
+	{
+		let mut ret = IS_GOOD;
+		let target_scripts_dir = self.root.join("scripts");
+		for _script in &self.config.scripts
+		{
+			// Making so many vars here for
+			// 1.) readability and
+			// 2.) to prevent "temporary value dropped while borrowed" ??
+			let absolute_script_path = std::path::PathBuf::from(&_script);
+			let file_name = absolute_script_path.file_name().unwrap();
+			let from_path = std::path::PathBuf::from(project.igloo.env.esfd.join(&_script));
+			let to_path = std::path::PathBuf::from(target_scripts_dir.join(&file_name));
+			match std::os::unix::fs::symlink(&from_path, &to_path)
+			{
+				Ok(_v) => (),
+				Err(e) =>
+				{
+					ret = IS_FAILED_TO_CREATE_SYMLINK;
+					igloo_debug!(ERROR,
+								 ret,
+								 "Failed to create symlink from {} to {} -- Error: {}",
+								 &from_path.to_str().unwrap(),
+								 &to_path.to_str().unwrap(),
+								 e);
+					return ret
+				}
+			}
+		}
+		ret
+	}
+
+	fn gather_esf_inc_files(&self, project: &IglooProject) -> IglooStatus
+	{
+		let mut ret = IS_GOOD;
+
 		ret
 	}
 	pub fn collect_makefile(&mut self, project: &IglooProject) -> IglooStatus

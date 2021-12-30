@@ -62,6 +62,7 @@ pub enum IglooStatus
 	IS_FAILED_TO_CREATE_DIR = 				0x07,
 	IS_FAILED_TO_EXTRACT_MF_VAR = 			0x08,
 	IS_FAILED_TO_WRITE_MF_VAR = 			0x09,
+	IS_FAILED_TO_CREATE_SYMLINK = 			0x0A,
 	IS_NONE = 								0xFF,
 }
 
