@@ -1,5 +1,5 @@
-#![allow(non_snake_case)]
-#![allow(non_camel_case_types)]
+// #![allow(non_snake_case)]
+// #![allow(non_camel_case_types)]
 
 pub extern crate clap;
 pub extern crate config;
@@ -24,7 +24,7 @@ use igloo_project::IglooProject;
 use igloo_manifest::IglooTargetManifest;
 
 #[macro_use] extern crate igloo_util;
-use igloo_util::IglooDebugSeverity::{self, *};
+use igloo_util::IglooDebugSeverity::*;
 use igloo_util::IglooStatus::{self, *};
 use igloo_util::IglooType::{self, *};
 use igloo_util::TRACE_LEVEL;
@@ -53,8 +53,6 @@ impl Igloo
 
 	pub fn start(&mut self) -> Result<IglooType, IglooStatus>
 	{
-		let mut res: IglooType = IT_NULL;
-
 		// get master target manifest
 		self.master_target_manifest = IglooTargetManifest::get(self).unwrap();
 

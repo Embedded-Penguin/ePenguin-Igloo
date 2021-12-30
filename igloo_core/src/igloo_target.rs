@@ -14,16 +14,18 @@
 // structs, but this is honestly just a trash way of doing it and I think the idea
 // of doing it that way is only an ideal solution. It isn't very practical.
 use igloo_util::*;
-use crate::Igloo;
 use crate::IglooProject;
 use serde::{Serialize, Deserialize};
 use std::vec::Vec;
 use igloo_util::IglooDebugSeverity::*;
 use igloo_util::IglooStatus::{self, *};
 use igloo_util::TRACE_LEVEL;
+use std::collections::HashMap;
+use std::fs::OpenOptions;
+use std::io::prelude::*;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct IglooTarget
+pub struct IglooTargetConfig
 {
 	name: String,
 	common: String,
@@ -35,11 +37,19 @@ pub struct IglooTarget
 	series: String,
 }
 
-impl IglooTarget
+#[derive(Debug)]
+pub struct IglooTarget
 {
-	fn _default() -> IglooTarget
+	root: std::path::PathBuf,
+	makefile: HashMap<String, config::Value>,
+	config: IglooTargetConfig,
+}
+
+impl IglooTargetConfig
+{
+	fn _default() -> IglooTargetConfig
 	{
-		IglooTarget
+		IglooTargetConfig
 		{
 			name: 	String::new(),
 			common: String::new(),
@@ -51,16 +61,29 @@ impl IglooTarget
 			series: String::new(),
 		}
 	}
+}
+impl IglooTarget
+{
+	fn _default() -> IglooTarget
+	{
+		IglooTarget
+		{
+			root: std::path::PathBuf::default(),
+			makefile: HashMap::new(),
+			config: IglooTargetConfig::_default(),
+		}
+	}
 
 	/// takes the targets name and looks up the path
 	/// deserializes the targets manifest file and creates the target
-	pub fn target_from_name(igloo: &Igloo, name: String) -> Result<IglooTarget, IglooStatus>
+	pub fn target_from_name(prj: &IglooProject, name: String) -> Result<IglooTarget, IglooStatus>
 	{
-		let target_path = igloo
+		let target_path = prj
+			.igloo
 			.env
 			.esfd
 			.clone()
-			.join(&igloo.master_target_manifest.targets[&name]);
+			.join(&prj.igloo.master_target_manifest.targets[&name]);
 
 		// We have to read in the file first so we can replace all variables with values
 		let targ_templ = match std::fs::read_to_string(&target_path)
@@ -90,13 +113,24 @@ impl IglooTarget
 		// get [esf] (which is technically a table...) from our config
 		let target_table: config::Value = target_config.get("esf").unwrap();
 
-		// turn it into an IglooTarget
-		let ret_target = target_table.try_into::<IglooTarget>().unwrap();
+		// turn it into an IglooTargetConfig
+		let ret_target_config = target_table.try_into::<IglooTargetConfig>().unwrap();
+
+		// Finally, create our IglooTarget
+		let mut ret_target = IglooTarget
+		{
+			root: prj.root.clone()
+				.join("igloo")
+				.join("targets")
+				.join(&name),
+			config: ret_target_config,
+			makefile: HashMap::new(),
+		};
+		ret_target.collect_makefile(prj);
 		igloo_debug!(INFO,
 					 IS_NONE,
 					 "Found Igloo target and deserialized it: {:?}",
 					 ret_target);
-
 
 		Ok(ret_target)
 	}
@@ -107,14 +141,29 @@ impl IglooTarget
 	{
 		let mut ret = IS_GOOD;
 
+		if !self.root.exists()
+		{
+			// Make self target dir
+			match std::fs::create_dir_all(&self.root)
+			{
+				Ok(_v) => (),
+				Err(e) =>
+				{
+					ret = IS_FAILED_TO_CREATE_DIR;
+					igloo_debug!(ERROR, ret, "Failed to create {} -- {}", self.root.to_str().unwrap(), e);
+					return ret
+				}
+			}
+		}
+
+		ret = self.generate_makefile(project);
 		ret
 	}
 
-	/*
 	pub fn generate_makefile(&self, project: &IglooProject) -> IglooStatus
 	{
 		let mut ret = IS_GOOD;
-		let target_root = project.root.join(self.name);
+		let target_root = self.root.clone();
 		// If the Makefile already exists, trash it
 		if target_root.join("Makefile").exists()
 		{
@@ -131,46 +180,47 @@ impl IglooTarget
 		//
 		writeln!(app_file, "# ePenguin Generated Variables").unwrap();
 		writeln!(app_file, "PROJECT_NAME={}", project.config.profile.name).unwrap();
-		writeln!(app_file, "TARGET_NAME={}", self.name).unwrap();
+		writeln!(app_file, "TARGET_NAME={}", self.config.name).unwrap();
 
-		let makefile: HashMap<String, config::Value> = HashMap::new();
+		loop
+		{
+			ret = self.makefile_write_var(
+				"TOOLCHAIN",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+			ret = self.makefile_write_var(
+				"CC",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
+			ret = self.makefile_write_var(
+				"CXX",
+				&mut app_file);
+			if ret != IS_GOOD
+			{
+				break;
+			}
 
-		match project.igloo.master_make_manifest.get("TOOLCHAIN")
-		{
-			None =>
+			ret = self.makefile_write_var(
+				"ELF_FLAGS",
+				&mut app_file);
+			if ret != IS_GOOD
 			{
-				println!("TOOLCHAIN Not found");
+				break;
 			}
-			Some(v) =>
-			{
-				write!(app_file, "TOOLCHAIN=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
-		match project.igloo.master_make_manifest.get("CC")
-		{
-			None =>
-			{
-				println!("CC Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "CC=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
-		match project.igloo.master_make_manifest.get("CXX")
-		{
-			None =>
-			{
-				println!("CXX Not found");
-			}
-			Some(v) =>
-			{
-				write!(app_file, "CXX=").unwrap();
-				writeln!(app_file, "{}", v.to_string()).unwrap();
-			},
-		}
+
+		break;}
+		writeln!(app_file, "\n\nQUOTE:=\"").unwrap();
+		ret
+	}
+	/*	
+
+
 		match project.igloo.master_make_manifest.get("OBJCOPY")
 		{
 			None =>
@@ -842,8 +892,112 @@ endif\n").unwrap();
 			},
 		}
 
-		writeln!(app_file, "\n\nQUOTE:=\"").unwrap();
-		IS_GOOD
+		*/
+
+	fn makefile_write_var(&self,
+						  name: &str,
+						  makefile: &mut std::fs::File) -> IglooStatus
+	{
+		let mut ret: IglooStatus = IS_GOOD;
+		println!("PRINTING MAKEFILE {:?}", self.makefile);
+		match self.makefile.get(name)
+		{
+			None =>
+			{
+				ret = IS_FAILED_TO_EXTRACT_MF_VAR;
+				igloo_debug!(WARNING, ret, "Failed to write make var {} -- wasn't found", name);
+			}
+			Some(v) =>
+			{
+				write!(makefile, "\n{}", String::from(name) + "=").unwrap();
+				match v.clone().into_array()
+				{
+					Ok(arr) =>
+					{
+						// is an array
+						for element in arr
+						{
+							writeln!(makefile, " \\").unwrap();
+							write!(makefile, "{}", element).unwrap();
+						}
+					}
+					Err(e) =>
+					{
+						// not an array
+						write!(makefile, "{}", v.clone().into_str().unwrap());
+					}
+				}
+			},
+		}
+		ret
 	}
-	*/
+
+	// fn makefile_write_rule(targ: &str, makefile_manifest: &config::Config, makefile: &std::fs::File)
+	// {
+
+	// 	match project.igloo.master_make_manifest.get("PUSH_CMDS")
+	// 	{
+	// 		None =>
+	// 		{
+	// 			println!("PUSH_CMDS Not found");
+	// 		}
+	// 		Some(v) =>
+	// 		{
+	// 			write!(app_file, "\n").unwrap();
+	// 			for cflag in v.clone().into_array().unwrap()
+	// 			{
+	// 				if !cflag.to_string().is_empty()
+	// 				{
+	// 					writeln!(app_file, "\t{}", cflag).unwrap()
+	// 				}
+	// 			}
+	// 		},
+	// 	}
+	// }
+
+	pub fn collect_makefile(&mut self, project: &IglooProject) -> IglooStatus
+	{
+		let mut ret: IglooStatus = IS_GOOD;
+
+		let (dummy, arch, family, mcu_name) = sscanf::scanf!(
+			self.config.series, "{}.{}.{}.{}", String, String, String, String).unwrap();
+		let mut make_table_head = &self.config.series[0..self.config.series.len()];
+		let mut b_quit: bool = false;
+		loop
+		{
+			let mut _active_table = project.igloo.master_make_manifest.get_table(&make_table_head).unwrap();
+			for(name, val) in _active_table
+			{
+				match val.clone().into_table()
+				{
+					// I have no idea why I did this in this way. Need to revisit...
+					Err(_e) =>
+					{
+						if !self.makefile.contains_key(&name)
+						{
+							self.makefile.insert(name, val);
+						}
+						else
+						{
+							let mut newval = val.clone().into_array().unwrap();
+							let mut newvec = self.makefile.get_key_value(&name).unwrap().1.clone().into_array().unwrap();
+							newvec.append(&mut newval);
+							self.makefile.insert(name, config::Value::from(newvec));
+						}
+					}
+					Ok(_v) => (),
+				}
+			}
+			match make_table_head.rfind('.')
+			{
+				None => b_quit = true,
+				Some(v) => make_table_head = &make_table_head[0..v],
+			}
+			if b_quit
+			{
+				break;
+			}
+		}
+		ret
+	}
 }

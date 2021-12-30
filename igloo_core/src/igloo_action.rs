@@ -1,3 +1,4 @@
+#![allow(warnings)]
 use clap::ArgMatches;
 
 use igloo_util::IglooDebugSeverity::*;
@@ -110,7 +111,7 @@ pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> Ig
 	prj.config.add_target(initial_target);
 	prj.targets = Settings::get_targets_from_config(&prj);
 
-	// Now populate
+	// Now populate project files
 	ret = prj.generate();
 	if ret != IS_GOOD
 	{
@@ -118,31 +119,21 @@ pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> Ig
 		return ret
 	}
 
-	ret = prj.generate_igloo_header();
+	// now do target folders
+	ret = prj.generate_targets();
 	if ret != IS_GOOD
 	{
-		igloo_debug!(ERROR, ret);
+		igloo_debug!(WARNING, ret);
 		return ret
 	}
 
-	ret = prj.generate_igloo_main();
-	if ret != IS_GOOD
-	{
-		igloo_debug!(ERROR, ret);
-	}
-
-	ret = prj.generate_project_config();
-	if ret != IS_GOOD
-	{
-		igloo_debug!(ERROR, ret);
-	}
 	ret
 }
 
 /// Debugging function to make sure projects are being loaded correctly
 pub fn ia_debug(igloo: &Igloo) -> IglooStatus
 {
-	let mut ret = IS_GOOD;
+	let mut ret: IglooStatus = IS_GOOD;
 
 	ret
 }

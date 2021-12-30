@@ -1,0 +1,3 @@
+[profile]
+name = "projecttest"
+targets = ["samd21j18a"]

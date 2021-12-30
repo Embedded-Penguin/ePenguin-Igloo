@@ -18,6 +18,7 @@ fn main()
 		{
 			match ig.run(it)
 			{
+
 				IS_GOOD => (),
 				// this is actually so dumb and should not exist in any language
 				ANYTHING_ELSE => igloo_debug!(ERROR, ANYTHING_ELSE),

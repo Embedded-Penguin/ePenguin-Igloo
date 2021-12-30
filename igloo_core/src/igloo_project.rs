@@ -3,7 +3,7 @@ use crate::Igloo;
 use crate::igloo_target::IglooTarget;
 
 use serde::{Serialize, Deserialize};
-use std::fs::{OpenOptions};
+use std::io::prelude::*;
 use igloo_util::IglooDebugSeverity::*;
 use igloo_util::IglooStatus::{self, *};
 use igloo_util::TRACE_LEVEL;
@@ -70,16 +70,15 @@ impl Settings
 			.clone()
 			.join("igloo")
 			.join("igloo.toml");
-		std::fs::File::create(&prj_cfg_path).unwrap();
-		let mut prj_cfg_file = OpenOptions::new()
-			.write(true)
-			.append(true)
-			.open(&prj_cfg_path)
-			.unwrap();
 
 		let contents = toml::to_string(&prj.config).unwrap();
-		igloo_debug!(TRACE, IS_NONE, "{}", contents);
-		println!("PRINTING THIS ON ITS OWN: {}", contents);
+		igloo_debug!(INFO, IS_NONE, "Project file to be written:\n{}", contents);
+		igloo_debug!(TRACE,
+					 IS_NONE,
+					 "Create project file: {}",
+					 &prj_cfg_path.to_str().unwrap());
+		let mut prj_cfg_file = std::fs::File::create(&prj_cfg_path).unwrap();
+		prj_cfg_file.write_all(contents.as_bytes()).unwrap();
 		IglooStatus::IS_GOOD
 	}
 
@@ -99,7 +98,7 @@ impl Settings
 		let mut _targets: Vec<IglooTarget> = Vec::new();
 		for target in prj.config.profile.targets.iter()
 		{
-			_targets.push(IglooTarget::target_from_name(prj.igloo, String::from(target)).unwrap());
+			_targets.push(IglooTarget::target_from_name(prj, String::from(target)).unwrap());
 		}
 		_targets
 	}
@@ -110,6 +109,7 @@ pub struct IglooProject<'a>
 	pub igloo: &'a Igloo,
 	pub config: Settings,
 	pub targets: Vec::<IglooTarget>,
+	// $PWD/${PROJECT_NAME}
 	pub root: std::path::PathBuf,
 }
 
@@ -180,104 +180,149 @@ impl<'a> IglooProject<'a>
 		// making this root and then cloning to work with active directory
 		// so i can make changes to active dir and still have my project root if i need it
 		// so far i havent needed it so i may just remove this
-
 		let active_dir = self.root.clone();
-		// create new project directory
-		match std::fs::create_dir(&active_dir)
+		loop
 		{
-			Err(e) =>
+			// create new project directory
+			match std::fs::create_dir(&active_dir)
 			{
-				ret = IS_FAILED_TO_CREATE_DIR;
-				igloo_debug!(ERROR, ret, "Failed to create dir: {:?} | {:?}", &active_dir, e);
-				return ret
+				Err(e) =>
+				{
+					ret = IS_FAILED_TO_CREATE_DIR;
+					igloo_debug!(ERROR,
+								 ret,
+								 "Failed to create dir: {:?} | {:?}",
+								 &active_dir,
+								 e);
+					break;
+				}
+				_ => (),
 			}
-			_ => (),
+
+			// create igloo directory
+			match std::fs::create_dir(&active_dir.clone().join("igloo"))
+			{
+				Err(e) =>
+				{
+					ret = IS_FAILED_TO_CREATE_DIR;
+					igloo_debug!(ERROR,
+								 ret,
+								 "Failed to create dir: {:?} | {:?}",
+								 &active_dir.clone().join("igloo"),
+								 e);
+					break;
+				}
+				_ => (),
+			}
+			match std::fs::create_dir(&active_dir.clone().join("inc"))
+			{
+				Err(e) =>
+				{
+					ret = IS_FAILED_TO_CREATE_DIR;
+					igloo_debug!(ERROR,
+								 ret,
+								 "Failed to create dir: {:?} | {:?}",
+								 &active_dir.clone().join("inc"),
+								 e);
+					break;
+				}
+				_ => (),
+			}
+
+			// create src directory
+			match std::fs::create_dir(&active_dir.clone().join("src"))
+			{
+				Err(e) =>
+				{
+					ret = IS_FAILED_TO_CREATE_DIR;
+					igloo_debug!(ERROR,
+								 ret,
+								 "Failed to create dir: {:?} | {:?}",
+								 &active_dir.clone().join("src"),
+								 e);
+					break;
+				}
+				_ => (),
+			}
+
+			match std::fs::create_dir(&active_dir.clone().join("cfg"))
+			{
+				Err(e) =>
+				{
+					ret = IS_FAILED_TO_CREATE_DIR;
+					igloo_debug!(ERROR,
+								 ret,
+								 "Failed to create dir: {:?} | {:?}",
+								 &active_dir.clone().join("cfg"),
+								 e);
+					break;
+				}
+				_ => (),
+			}
+
+			match std::fs::create_dir(&active_dir.clone().join("esf"))
+			{
+				Err(e) =>
+				{
+					ret = IS_FAILED_TO_CREATE_DIR;
+					igloo_debug!(ERROR,
+								 ret,
+								 "Failed to create dir: {:?} | {:?}",
+								 &active_dir.clone().join("esf"),
+								 e);
+					break;
+				}
+				_ => (),
+			}
+
+			// project folders finished
+			// create project settings file (igloo.toml)
+			ret = self.generate_project_config();
+			if ret != IS_GOOD
+			{
+				break;
+			}
+
+			ret = self.generate_igloo_header();
+			if ret != IS_GOOD
+			{
+				igloo_debug!(ERROR, ret);
+				break;
+				
+			}
+
+			ret = self.generate_igloo_main();
+			if ret != IS_GOOD
+			{
+				igloo_debug!(ERROR, ret);
+				break;
+			}
+
+			//
+			break;
 		}
 
-		// create igloo directory
-		match std::fs::create_dir(&active_dir.clone().join("igloo"))
-		{
-			Err(e) =>
-			{
-				ret = IS_FAILED_TO_CREATE_DIR;
-				igloo_debug!(ERROR, ret, "Failed to create dir: {:?} | {:?}", &active_dir.clone().join("igloo"), e);
-				return ret
-			}
-			_ => (),
-		}
-		match std::fs::create_dir(&active_dir.clone().join("inc"))
-		{
-			Err(e) =>
-			{
-				ret = IS_FAILED_TO_CREATE_DIR;
-				igloo_debug!(ERROR, ret, "Failed to create dir: {:?} | {:?}", &active_dir.clone().join("inc"), e);
-				return ret
-			}
-			_ => (),
-		}
-
-		// create src directory
-		match std::fs::create_dir(&active_dir.clone().join("src"))
-		{
-			Err(e) =>
-			{
-				ret = IS_FAILED_TO_CREATE_DIR;
-				igloo_debug!(ERROR, ret, "Failed to create dir: {:?} | {:?}", &active_dir.clone().join("src"), e);
-				return ret
-			}
-			_ => (),
-		}
-
-		match std::fs::create_dir(&active_dir.clone().join("cfg"))
-		{
-			Err(e) =>
-			{
-				ret = IS_FAILED_TO_CREATE_DIR;
-				igloo_debug!(ERROR, ret, "Failed to create dir: {:?} | {:?}", &active_dir.clone().join("cfg"), e);
-				return ret
-			}
-			_ => (),
-		}
-
-		match std::fs::create_dir(&active_dir.clone().join("esf"))
-		{
-			Err(e) =>
-			{
-				ret = IS_FAILED_TO_CREATE_DIR;
-				igloo_debug!(ERROR, ret, "Failed to create dir: {:?} | {:?}", &active_dir.clone().join("esf"), e);
-				return ret
-			}
-			_ => (),
-		}
-
-		// project folders finished
-		// create project settings file (igloo.toml)
-		ret = self.generate_project_config();
 		if ret != IS_GOOD
 		{
-			igloo_debug!(WARNING, ret);
+			igloo_debug!(ERROR, ret);
 			return ret
 		}
-
-		// now do target folders
-		ret = self.generate_targets();
-		if ret != IS_GOOD
-		{
-			igloo_debug!(WARNING, ret);
-			return ret
-		}
-
 
 		return ret
 	}
 
-	fn generate_targets(&self) -> IglooStatus
+	pub fn generate_targets(&self) -> IglooStatus
 	{
+		let mut ret = IS_GOOD;
 		for target in &self.targets
 		{
-			target.generate(self);
+			ret = target.generate(self);
+			if ret != IS_GOOD
+			{
+				return ret
+			}
 		}
-		IS_GOOD
+		ret
 	}
 
 	pub fn generate_igloo_header(&self) -> IglooStatus

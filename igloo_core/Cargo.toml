@@ -11,4 +11,5 @@ config = "0.11"
 directories = "3.0.1"
 toml = "0.5.8"
 serde = { version = "1.0.132", features = ["derive"]}
+sscanf = "0.1.2"
 igloo_util = { path="../igloo_util" }
