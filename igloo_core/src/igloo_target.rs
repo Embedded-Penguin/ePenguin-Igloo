@@ -979,6 +979,13 @@ endif\n").unwrap();
 			// Making so many vars here for
 			// 1.) readability and
 			// 2.) to prevent "temporary value dropped while borrowed" ??
+			// I should revisit this to make sure there are no shenanigans
+			// original:
+			/*
+				- let absolute_script_path = std::path::PathBuf::from(&_script);
+				- let file_name = absolute_script_path.file_name().unwrap();
+				+ let file_name = std::path::PathBuf::from(&script).file_name().unwrap();
+			*/
 			let absolute_script_path = std::path::PathBuf::from(&_script);
 			let file_name = absolute_script_path.file_name().unwrap();
 			let from_path = std::path::PathBuf::from(project.igloo.env.esfd.join(&_script));
