@@ -64,6 +64,11 @@ fn igloo_run_cli() -> clap::ArgMatches
 						 .required(false)
 						 .about("Release or Debug build type\n\
 								 Defaults to Debug")),)
+		.subcommand(App::new("build")
+					.about("Builds all targets unless otherwise specified.")
+					.arg(Arg::new("build_type")
+						 .required(false)
+						 .about("Options are release, debug, and clean")))
 		.subcommand(App::new("push")
 					.about("Pushes/flashes target(s)")
 					.arg(Arg::new("build_type")

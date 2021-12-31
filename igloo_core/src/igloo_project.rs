@@ -288,7 +288,6 @@ impl<'a> IglooProject<'a>
 			{
 				igloo_debug!(ERROR, ret);
 				break;
-				
 			}
 
 			ret = self.generate_igloo_main();
@@ -327,12 +326,46 @@ impl<'a> IglooProject<'a>
 
 	pub fn generate_igloo_header(&self) -> IglooStatus
 	{
+		let mut ret = IS_GOOD;
+
+		let prj_header_path = self.root.join("inc").join("igloo.h");
+		let mut prj_header_file = std::fs::File::create(&prj_header_path).unwrap();
+		// begin ifdef guards for igloo_h
+		prj_header_file.write("#ifndef _IGLOO_H_\n".as_bytes()).unwrap();
+		prj_header_file.write("#define _IGLOO_H_\n".as_bytes()).unwrap();
+		// now do targets
+		for target in &self.targets
+		{
+			prj_header_file.write(
+				format!("\n// Header files for {}\n", target.config.name)
+					.as_bytes()).unwrap();
+			for include in &target.config.includes
+			{
+				prj_header_file.write(
+					format!("#include \"{}\"", include).as_bytes()).unwrap();
+			}
+		}
+		prj_header_file.write("\n\n#endif\n".as_bytes()).unwrap();
 		IS_GOOD
 	}
 
 	pub fn generate_igloo_main(&self) -> IglooStatus
 	{
-		IS_GOOD
+		let mut ret = IS_GOOD;
+
+		let prj_main_path = self.root.join("src").join("main.c");
+		let mut prj_main_file = std::fs::File::create(&prj_main_path).unwrap();
+		prj_main_file.write("#include \"igloo.h\"
+
+int main()
+{
+	for(;;){}
+
+	// should never get here
+	return 0;
+}
+".as_bytes()).unwrap();
+		ret
 	}
 
 	pub fn generate_project_config(&self) -> IglooStatus

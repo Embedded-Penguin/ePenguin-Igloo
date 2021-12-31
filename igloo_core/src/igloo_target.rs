@@ -27,9 +27,9 @@ use std::io::prelude::*;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct IglooTargetConfig
 {
-	name: String,
+	pub name: String,
 	links: Vec<String>,
-	includes: Vec<String>,
+	pub includes: Vec<String>,
 	scripts: Vec<String>,
 	series: String,
 }
@@ -38,8 +38,8 @@ pub struct IglooTargetConfig
 pub struct IglooTarget
 {
 	root: std::path::PathBuf,
-	makeopts: HashMap<String, config::Value>,
-	config: IglooTargetConfig,
+	pub makeopts: HashMap<String, config::Value>,
+	pub config: IglooTargetConfig,
 }
 
 impl IglooTargetConfig
@@ -238,6 +238,7 @@ impl IglooTarget
 
 	pub fn generate_makefile(&self, project: &IglooProject) -> IglooStatus
 	{
+
 		let mut ret = IS_GOOD;
 		let target_root = self.root.clone();
 		// If the Makefile already exists, trash it
@@ -362,7 +363,7 @@ impl IglooTarget
 			writeln!(app_file, "").unwrap();
 
 			// Write out our compiler flags
-			writeln!(app_file, "## Compiler Flags").unwrap();
+			write!(app_file, "\n## Compiler Flags").unwrap();
 			ret = self.makefile_write_var(
 				"CFLAGS",
 				&mut app_file);
@@ -371,6 +372,7 @@ impl IglooTarget
 				break;
 			}
 
+			writeln!(app_file, "").unwrap();
 			ret = self.makefile_write_var(
 				"ELF_FLAGS",
 				&mut app_file);
@@ -379,6 +381,7 @@ impl IglooTarget
 				break;
 			}
 
+			writeln!(app_file, "").unwrap();
 			ret = self.makefile_write_var(
 				"HEX_FLAGS",
 				&mut app_file);
@@ -429,6 +432,11 @@ impl IglooTarget
 				break;
 			}
 
+			// Write our DEPS and DEPS_AS_ARGS vars
+			writeln!(app_file, "\n").unwrap();
+			writeln!(app_file, "DEPS=$(OBJS_AS_ARGS:%.o=%.d)").unwrap();
+			writeln!(app_file, "DEPS_AS_ARGS=$(OBJS:%.o=%.d)").unwrap();
+
 			writeln!(app_file, "").unwrap();
 			ret = self.makefile_write_var(
 				"DIR_INCLUDES",
@@ -438,25 +446,7 @@ impl IglooTarget
 				break;
 			}
 
-			writeln!(app_file, "").unwrap();
-			ret = self.makefile_write_var(
-				"DEPS",
-				&mut app_file);
-			if ret != IS_GOOD
-			{
-				break;
-			}
-
-			writeln!(app_file, "").unwrap();
-			ret = self.makefile_write_var(
-				"DEPS_AS_ARGS",
-				&mut app_file);
-			if ret != IS_GOOD
-			{
-				break;
-			}
-
-			writeln!(app_file, "\nvpath %.c ../../../").unwrap();
+			writeln!(app_file, "\n\nvpath %.c ../../../").unwrap();
 			writeln!(app_file, "vpath %.s ../../../").unwrap();
 			writeln!(app_file, "vpath %.S ../../../\n").unwrap();
 			writeln!(app_file, ".PHONY: debug push clean\n").unwrap();
@@ -502,7 +492,10 @@ impl IglooTarget
 
 		if ret != IS_GOOD
 		{
-			igloo_debug!(ERROR, ret, "Failed to write some var to the makefile for target {}", self.config.name);
+			igloo_debug!(ERROR,
+						 ret,
+						 "Failed to write some var to the makefile for target {}",
+						 self.config.name);
 		}
 		ret
 	}
@@ -520,7 +513,10 @@ impl IglooTarget
 			None =>
 			{
 				ret = IS_FAILED_TO_EXTRACT_MF_VAR;
-				igloo_debug!(WARNING, ret, "Failed to write make var {} -- wasn't found", name);
+				igloo_debug!(WARNING,
+							 ret,
+							 "Failed to write make var {} -- wasn't found",
+							 name);
 			}
 			Some(v) =>
 			{
@@ -532,7 +528,7 @@ impl IglooTarget
 						// is an array
 						for element in arr
 						{
-							writeln!(makefile, " \\").unwrap();
+							writeln!(makefile, "\\").unwrap();
 							write!(makefile, "{}", element).unwrap();
 						}
 					}
@@ -1064,18 +1060,20 @@ endif\n").unwrap();
 		ret
 	}
 
-	fn gather_esf_inc_files(&self, project: &IglooProject) -> IglooStatus
-	{
-		let mut ret = IS_GOOD;
-
-		ret
-	}
 	pub fn collect_makefile(&mut self, project: &IglooProject) -> IglooStatus
 	{
 		let mut ret: IglooStatus = IS_GOOD;
 
-		let (dummy, arch, family, mcu_name) = sscanf::scanf!(
-			self.config.series, "{}.{}.{}.{}", String, String, String, String).unwrap();
+		// NOTE: Add
+		// 
+		// DEPS = "$(OBJS:%.o=%.d)"
+		// DEPS_AS_ARGS = "$(OBJS_AS_ARGS:%.o=%.d)"
+		// Convert OBJS to OBJS_AS_ARGS
+		// add esf/...guts.../mcu/src to SUB_DIRS
+		/*let (dummy, arch, family, mcu_name) = sscanf::scanf!(
+		self.config.series, "{}.{}.{}.{}", String, String, String, String).unwrap(); */
+
+		// collect makefile data
 		let mut make_table_head = &self.config.series[0..self.config.series.len()];
 		let mut b_quit: bool = false;
 		loop
@@ -1113,6 +1111,33 @@ endif\n").unwrap();
 				break;
 			}
 		}
+
+		if ret != IS_GOOD
+		{
+			igloo_debug!(ERROR, ret);
+			return ret;
+		}
+
+		// Generate the remaining variables from the makefile data
+		// Convert OBJS to OBJS_AS_ARGS
+		let mut objs_as_args: Vec<String> = Vec::new();
+		let mut sub_dirs: Vec<String> = Vec::new();
+		let objs = self.makeopts.get("OBJS").unwrap();
+		for obj in objs.clone().into_array().unwrap()
+		{
+			let obj_as_arg_string: String = format!(
+				"$(QUOTE){}$(QUOTE)",
+				obj.clone().into_str().unwrap());
+			let mut sub_dir_as_string = String::from(&obj.into_str().unwrap());
+			sub_dir_as_string = String::from(
+				&sub_dir_as_string[0..sub_dir_as_string.rfind('/').unwrap()]);
+			objs_as_args.push(obj_as_arg_string);
+			// println!("{}", &sub_dir_as_string);
+			sub_dirs.push(sub_dir_as_string);
+		}
+		self.makeopts.insert("OBJS_AS_ARGS".to_owned(), config::Value::from(objs_as_args));
+		self.makeopts.insert("SUB_DIRS".to_owned(), config::Value::from(sub_dirs));
+		// generate SUB_DIRS
 		ret
 	}
 
