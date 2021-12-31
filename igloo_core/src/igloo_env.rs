@@ -1,5 +1,8 @@
 use crate::{PathBuf, env, UserDirs};
 
+use igloo_util::IglooDebugSeverity::*;
+use igloo_util::IglooStatus::*;
+use igloo_util::TRACE_LEVEL;
 // static PROJECT_CONFIG_FILE_NAME: &str = "igloo.toml";
 
 #[derive(Debug, PartialEq, Clone)]
@@ -22,7 +25,14 @@ impl IglooEnv
 			cwd: match env::current_dir()
 			{
 				Ok(v) => v,
-				Err(e) => panic!(),
+				Err(e) =>
+				{
+					igloo_debug!(ERROR,
+								 IS_MISSING_ENV_VARIABLES,
+								 "Failed to get current working directory... {}",
+								 e);
+					panic!();
+				}
 			},
 			hd: match UserDirs::new()
 			{

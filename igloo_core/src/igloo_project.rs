@@ -91,8 +91,8 @@ impl Settings
 		self.profile.targets.push(target_name);
 	}
 
-	/// This function is labeled .._from_config, but the project contains
-	/// the environment vars (from &Igloo) and config already
+	// This function is labeled .._from_config, but the project contains
+	// the environment vars (from &Igloo) and config already
 	pub fn get_targets_from_config(prj: &IglooProject) -> Vec<IglooTarget>
 	{
 		let mut _targets: Vec<IglooTarget> = Vec::new();

@@ -94,7 +94,6 @@ impl Igloo
 				res_err = igloo_action::ia_new(self,
 								  igloo_cli::ich_new_get_project_name(self),
 								  igloo_cli::ich_new_get_target_name(self));
-				println!("Value of res_err is: {:?}", res_err);
 			}
 			IT_RUN =>
 			{
@@ -136,6 +135,11 @@ impl Igloo
 			{
 
 			}
+		}
+
+		if res_err != IS_GOOD
+		{
+			igloo_debug!(ERROR, res_err, "Igloo action failed...");
 		}
 		res_err
 	}

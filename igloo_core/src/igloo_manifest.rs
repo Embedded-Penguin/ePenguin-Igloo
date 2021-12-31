@@ -27,6 +27,7 @@ impl IglooTargetManifest
 			targets: HashMap::new(),
 		}
 	}
+
 	pub fn get(igloo: &Igloo) -> Result<IglooTargetManifest, IglooStatus>
 	{
 		igloo_debug!(TRACE,

@@ -28,10 +28,7 @@ use std::io::prelude::*;
 pub struct IglooTargetConfig
 {
 	name: String,
-	common: String,
-	mcu: String,
-	ld: String,
-	cfg: String,
+	links: Vec<String>,
 	includes: Vec<String>,
 	scripts: Vec<String>,
 	series: String,
@@ -52,10 +49,7 @@ impl IglooTargetConfig
 		IglooTargetConfig
 		{
 			name: 	String::new(),
-			common: String::new(),
-			mcu: 	String::new(),
-			ld: 	String::new(),
-			cfg: 	String::new(),
+			links: Vec::new(),
 			includes: Vec::new(),
 			scripts: Vec::new(),
 			series: String::new(),
@@ -172,13 +166,73 @@ impl IglooTarget
 			}
 		}
 
+		// Create symlinks for esf scripts
 		ret = self.gather_esf_gdb_scripts(project);
 		if ret != IS_GOOD
 		{
 			return ret
 		}
 
+		// Create symlinks required by the target
+		// these links need to be formatted like so
+		// arch/...guts.../link_name
+		// igloo will use the guts to create the directories needed to make the symlinks
+		// also need to handle these unwraps
+		for link in &self.config.links
+		{
+			// name of the link is the final name in the path, i.e. arch/arm/"common"
+			let link_name = String::from(&link[link.rfind('/').unwrap() + 1..link.len()]);
+			let guts = String::from(&link[link.find('/').unwrap() + 1..link.rfind('/').unwrap()]);
+			let guts_path = project.root.join("esf").join(std::path::PathBuf::from(&guts));
+			// paths for the symlink creation
+			let from_path = project.igloo.env.esfd.join(&link);
+			let to_path = guts_path.join(&link_name);
+			match std::fs::create_dir_all(&guts_path)
+			{
+				Ok(_v) =>
+				{
+					match std::os::unix::fs::symlink(&from_path, &to_path)
+					{
+						Ok(__v) => (),
+						Err(e) =>
+						{
+							ret = IS_FAILED_TO_CREATE_SYMLINK;
+							igloo_debug!(ERROR,
+										 ret,
+										 "Failed to create symlink from {} to {} -- {}",
+										 &from_path.to_str().unwrap(),
+										 &to_path.to_str().unwrap(),
+										 e);
+						}
+					}
+				}
+				Err(e) =>
+				{
+					ret = IS_FAILED_TO_CREATE_DIR;
+					igloo_debug!(ERROR,
+								 ret,
+								 "Failed to create dir {} -- {}",
+								 &guts_path.to_str().unwrap(),
+								 e);
+					return ret;
+				}
+			}
+		}
+
+		// Write out our targets config to its config file located at its root
+		// ex. project/igloo/targets/<targetname>/<targetname>.toml
+		ret = self.generate_config(project);
+		if ret != IS_GOOD
+		{
+			igloo_debug!(ERROR, ret, "Failed to create target config...");
+			return ret;
+		}
+
 		ret = self.generate_makefile(project);
+		if ret != IS_GOOD
+		{
+			igloo_debug!(ERROR, ret, "Failed to generate makefile...");
+		}
 		ret
 	}
 
@@ -482,10 +536,10 @@ impl IglooTarget
 							write!(makefile, "{}", element).unwrap();
 						}
 					}
-					Err(e) =>
+					Err(_e) =>
 					{
 						// not an array
-						write!(makefile, "{}", v.clone().into_str().unwrap());
+						write!(makefile, "{}", v.clone().into_str().unwrap()).unwrap();
 					}
 				}
 			},
@@ -980,6 +1034,7 @@ endif\n").unwrap();
 			// 1.) readability and
 			// 2.) to prevent "temporary value dropped while borrowed" ??
 			// I should revisit this to make sure there are no shenanigans
+			// Only commenting this because I don't get it. They look exactly the same. ??
 			// original:
 			/*
 				- let absolute_script_path = std::path::PathBuf::from(&_script);
@@ -1061,4 +1116,24 @@ endif\n").unwrap();
 		ret
 	}
 
+	// this needs to be changed to convert the esf table contents into an actual table
+	// named esf
+	// right now im just writing [esf]\n<table_contents>
+	// the drawback of this is user configurations will be overwritten every time a target
+	// config needs to be regenerated
+	pub fn generate_config(&self, project: &IglooProject) -> IglooStatus
+	{
+		let mut ret = IS_GOOD;
+		let cfg_path = self.root.join(
+			String::from(
+				&self.config.name) + ".toml");
+
+
+		let esf_table_contents = toml::to_string(&self.config).unwrap();
+		let mut target_cfg_file = std::fs::File::create(&cfg_path).unwrap();
+		target_cfg_file.write("[esf]\n".as_bytes()).unwrap();
+		target_cfg_file.write_all(esf_table_contents.as_bytes()).unwrap();
+		target_cfg_file.write("\n[user]\n".as_bytes()).unwrap();
+		ret
+	}
 }
