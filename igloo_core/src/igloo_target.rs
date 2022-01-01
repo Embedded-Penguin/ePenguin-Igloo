@@ -434,9 +434,9 @@ impl IglooTarget
 
 			// Write our DEPS and DEPS_AS_ARGS vars
 			writeln!(app_file, "\n").unwrap();
-			writeln!(app_file, "DEPS=$(OBJS_AS_ARGS:%.o=%.d)").unwrap();
-			writeln!(app_file, "DEPS_AS_ARGS=$(OBJS:%.o=%.d)").unwrap();
-
+			writeln!(app_file, "DEPS=$(OBJS:%.o=%.d)").unwrap();
+			writeln!(app_file, "DEPS_AS_ARGS=$(OBJS_AS_ARGS:%.o=%.d)").unwrap();
+			
 			writeln!(app_file, "").unwrap();
 			ret = self.makefile_write_var(
 				"DIR_INCLUDES",
@@ -1131,9 +1131,15 @@ endif\n").unwrap();
 			let mut sub_dir_as_string = String::from(&obj.into_str().unwrap());
 			sub_dir_as_string = String::from(
 				&sub_dir_as_string[0..sub_dir_as_string.rfind('/').unwrap()]);
-			objs_as_args.push(obj_as_arg_string);
-			// println!("{}", &sub_dir_as_string);
-			sub_dirs.push(sub_dir_as_string);
+			if !objs_as_args.contains(&obj_as_arg_string)
+			{
+				objs_as_args.push(obj_as_arg_string);
+			}
+
+			if !sub_dirs.contains(&sub_dir_as_string)
+			{
+				sub_dirs.push(sub_dir_as_string);
+			}
 		}
 		self.makeopts.insert("OBJS_AS_ARGS".to_owned(), config::Value::from(objs_as_args));
 		self.makeopts.insert("SUB_DIRS".to_owned(), config::Value::from(sub_dirs));
