@@ -9,6 +9,7 @@ use igloo_util::IglooDebugSeverity::{self, *};
 use igloo_util::IglooStatus::{self, *};
 use igloo_util::IglooType::{self, *};
 use igloo_util::TRACE_LEVEL;
+
 fn main()
 {
 	let mut ig = Igloo::new();

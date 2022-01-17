@@ -130,6 +130,42 @@ pub fn ia_new(igloo: &Igloo, project_name: String, initial_target: String) -> Ig
 	ret
 }
 
+pub fn ia_build(igloo: &Igloo) -> IglooStatus
+{
+    let mut ret: IglooStatus = IS_GOOD;
+
+    loop
+    {
+        if !IglooProject::is_igloo_prj(&igloo.env.cwd)
+        {
+            ret = IS_NOT_IGLOO_DIRECTORY;
+            break;
+        }
+
+        let mut prj = match IglooProject::from_existing(&igloo)
+        {
+            Ok(v) => v,
+            Err(e) => 
+            {
+                ret = e;
+                break;
+            },
+        };
+
+
+
+
+
+
+    break;}
+
+    if ret != IS_GOOD
+    {
+        igloo_debug!(ERROR, ret);
+    }
+    ret
+}
+
 /// Debugging function to make sure projects are being loaded correctly
 pub fn ia_debug(igloo: &Igloo) -> IglooStatus
 {

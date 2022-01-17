@@ -129,6 +129,14 @@ impl IglooTarget
 		Ok(ret_target)
 	}
 
+    // Verifies target is valid and exists within the project
+    // This means the target must have a folder in the targets folder
+    // and a <target_name>.toml
+    pub fn target_from_existing(prj: &IglooProject, name: String) -> Result<IglooTarget, IglooStatus>
+    {
+
+    }
+
 	/// Creates the target's configuration file from itself
 	/// the target must be valid at this point or else the file will be junk
 	pub fn generate(&self, project: &IglooProject) -> IglooStatus

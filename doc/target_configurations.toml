@@ -1,0 +1,36 @@
+# Target Configurations
+# The default [esf] sections have been removed because they aren't important here.
+# What is important in your target.toml files is your user section.
+# You can define things like extra include directories, more object files, and more.
+# One thing to note is that arrays will ADD to the make variable. Regular strings will 
+# REPLACE the variable if it already exists.
+# Example
+#	inc_dirs = ["inc/dir/one", "inc/dir/two" ]
+# 	This will ADD to the already existing include directories in your makefile
+#
+# 	toolchain = "/usr/bin/arm-unknown-eabi"
+# 	This will REPLACE the already existing toolchain variable.
+#
+#
+# In order to revert from these changes to the defaults, you just need to remove the variables.
+# Igloo will restore the missing variables with their originals.
+[esf]
+# ignore this section. Focus on the user section
+
+[user]
+# esf modules have yet to be created, but when they are created, they will be added like this.
+modules = ["usart_sync", "usart_async"]
+
+# At some point, igloo will support some editors. This just means producing a project file or a specific directory
+# so that your editor or ide will already see your project as a project and not just a bunch of files.
+# The editor var will also be allowed to include some extra support like bear (for generating compile_commands.json)
+# This has not yet been implemented.
+# editor = ["nvim", "bear"]
+
+[user.make]
+toolchain = "/usr/bin/arm-unknown-eabi" # custom toolchain path here
+objs = ["my/object.o"]
+# inc_dirs: Specify include directories you want the toolchain to see
+# Specify paths from the root of your project, not absolute dirs
+inc_dirs = ["inc/dir/one", "inc/dir/two"]
+

@@ -113,7 +113,7 @@ impl Igloo
 			}
 			IT_BUILD =>
 			{
-
+                res_err = igloo_action::ia_build(self);
 			}
 			IT_ERASE =>
 			{
