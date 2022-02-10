@@ -134,6 +134,7 @@ impl IglooTarget
     // and a <target_name>.toml
     pub fn target_from_existing(prj: &IglooProject, name: String) -> Result<IglooTarget, IglooStatus>
     {
+		Ok(IglooTarget::_default())
 
     }
 
