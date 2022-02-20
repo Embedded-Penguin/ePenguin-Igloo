@@ -60,6 +60,11 @@ pub fn igloo_subcommand(args: &ArgMatches) -> Result<IglooType, IglooStatus>
 			igloo_debug!(TRACE, IS_NONE, "Igloo debug was called");
 			_res_type = IT_DEBUG;
 		}
+		Some("configure") =>
+		{
+			igloo_debug!(TRACE, IS_NONE, "Igloo configure was called");
+			_res_type = IT_CONFIGURE;
+		}
 		None => unreachable!(),
 		_ => unreachable!(),
 	}
@@ -145,15 +150,12 @@ pub fn ia_build(igloo: &Igloo) -> IglooStatus
         let mut prj = match IglooProject::from_existing(&igloo)
         {
             Ok(v) => v,
-            Err(e) => 
+            Err(e) =>
             {
                 ret = e;
                 break;
             },
         };
-
-
-
 
 
 
@@ -166,10 +168,36 @@ pub fn ia_build(igloo: &Igloo) -> IglooStatus
     ret
 }
 
-/// Debugging function to make sure projects are being loaded correctly
-pub fn ia_debug(igloo: &Igloo) -> IglooStatus
+/// Reconfiguration function
+pub fn ia_configure(igloo: &Igloo) -> IglooStatus
 {
 	let mut ret: IglooStatus = IS_GOOD;
+
+	loop
+	{
+		if !IglooProject::is_igloo_prj(&igloo.env.cwd)
+		{
+			ret = IS_NOT_IGLOO_DIRECTORY;
+			break;
+		}
+
+		let mut prj = match IglooProject::from_existing(&igloo)
+		{
+			Ok(v) => v,
+			Err(e) =>
+			{
+				ret = e;
+				break;
+			},
+		};
+
+		// start with profile
+		
+		// check targets exist
+		// check if makefile needs regenerating
+
+
+	break;}
 
 	ret
 }

@@ -94,6 +94,8 @@ fn igloo_run_cli() -> clap::ArgMatches
 								.arg(Arg::new("target_name")
 								.required(true)
 								.about("name of the target to be removed"))))
+		.subcommand(App::new("configure")
+					.about("Reconfigures project"))
 		.subcommand(App::new("info")
 					.about("Provides info about various parts of igloo")
 					.subcommand(App::new("list")

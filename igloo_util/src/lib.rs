@@ -22,9 +22,11 @@ mod tests {
 /// * IT_INFO: Gets information about igloo and your project.
 /// * IT_NULL: Default type... used for debugging and development. More on this later
 /// * IT_DEBUG: this state is useful for debugging project failures. Only to be used in debug build of igloo. More on this later
+/// * IT_CONFIGURE: checks config files, parses them for errors, and updates projects with changes
 pub enum IglooType
 {
 	IT_NEW = 0,
+	IT_INIT,
 	IT_RUN,
 	IT_PUSH,
 	IT_PULL,
@@ -34,7 +36,7 @@ pub enum IglooType
 	IT_INFO,
 	IT_TARGET,
 	IT_NULL,
-	IT_DEBUG,
+	IT_CONFIGURE,
 }
 
 #[derive(Debug, PartialEq, Clone)]

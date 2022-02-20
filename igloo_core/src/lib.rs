@@ -135,6 +135,10 @@ impl Igloo
 			{
 
 			}
+			IT_CONFIGURE =>
+			{
+				res_err = igloo_action::ia_configure(self);
+			}
 		}
 
 		if res_err != IS_GOOD

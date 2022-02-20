@@ -1,38 +1,37 @@
 # ePenguin-Igloo
 
-### What is Igloo?
+## What is Igloo?
 
-Igloo is a package and project manager. It is used for bare metal (for now only bare metal) embedded systems. In the embedded world, there is a big gap between how one would write code for embedded systems between manufacturers. As of today, 7/2/20, there is really no easy way to go about writing code for any embedded system from scratch. Most of the time, you need to download headers from some unknown location, figure out your hardware interface, find the proper toolchain, etc. This forces embedded developers and engineers to spend a lot of unnecessary time on DevOps and less time on firmware engineering. Igloo aims to solve this problem. Igloo is in its early stages of development.
+Igloo was a full on project and package manager. It is no longer that. Igloo is a tool for creating and maintaining projects. It can create bare metal projects (with no framework), and it can also convert and work with ASF4 (Atmel Start) projects.
 
-### How does Igloo help with this problem?
+Microchip may decide to one day kill atmel start so this project may one day be useless.
 
-This tool allows you to create projects for supported mcus instantly. As long as your hardware is supported, Igloo will just make the project for you. It also allows you to add pre-written software modules, just in case you don't want to write your own. This tool also provides a way to debug your code, flash your mcu, and quickly switch between mcus.
+## Why does this exist?
 
-### Status Guide
-| Icon               | Description         |
-| ---                | ---                 |
-| :grey_exclamation: | Not supported       |
-| :exclamation:      | In Development      |
-| :grey_question:    | Unstable            |
-| :question:         | Experimental        |
-| :heavy_check_mark: | Tentatively Working |
-| :white_check_mark: | Stable              |
+I use vim and emacs (on and off) as my text editor. I do not use an IDE.
 
-##### Status Guide Description
- - Not Supported: This means it is not currently supported. It does not mean it will never be supported.
- - In Development: Yet to be released for use at all. We're working on it.
- - Unstable: A version of this is out for public development, but it doesn't work yet.
- - Experimental: A version of this is out for public developement and testing. It may or may not work.
- - Tentatively Working: Some form of this works. It just may not be working in the right way yet.
- - Stable: This works as far as we know. Any bugs are minor and should not interfere with use.
-### Supported Platforms
+It aims solves a few problems:
+	- Regenerating atmel start projects after recustomizing the board settings via the web configurator should be as simple as one command. It shouldn't be a whole ordeal where if you regenerate your project you have to re-move your source files back into the new generated project.
+	- Compiling, executing, and debugging your code should be more streamlined than opening a bunch of terminals that just sit idling.
+	- Adding source files to your makefile should be as simple as a command or two. Same with include directories and other configurations.
+	- Automate other miscellaneous operations.
 
-| Platform | Status        |
-| ---      | ---           |
-| Windows  | :exclamation: |
-| Linux    | :exclamation: |
-| MacOS    | :exclamation: |
-### Installation -- TBD
-### Usage -- TBklfjdslkfjlksdjflksdjflkjfi
-### How to contribute -- TBD
-fhdhejslenfghuyehggjhk
+
+## Prerequisites and Assumptions
+
+I'm going to assume you know how to get your desired toolchain. It is a prerequisite.
+
+	- [https://github.com/rizsotto/Bear](bear) (OPTIONAL)
+	- [https://github.com/openocd-org/openocd.git](openocd)
+	- [https://www.rust-lang.org/tools/install](rust)
+
+These things can also be installed by your package manager if you want to install a binary instead of building from source. I'll update the instructions for different distros at some point.
+
+
+## Usage
+
+## Installation
+
+```
+
+```
