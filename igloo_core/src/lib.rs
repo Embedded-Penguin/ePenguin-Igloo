@@ -95,6 +95,10 @@ impl Igloo
 								  igloo_cli::ich_new_get_project_name(self),
 								  igloo_cli::ich_new_get_target_name(self));
 			}
+			IT_INIT =>
+			{
+
+			}
 			IT_RUN =>
 			{
 
@@ -128,10 +132,6 @@ impl Igloo
 
 			}
 			IT_NULL =>
-			{
-
-			}
-			IT_DEBUG =>
 			{
 
 			}
