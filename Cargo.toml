@@ -5,14 +5,11 @@ authors = ["Penguin <...>"]
 edition = "2021"
 repository = "https://github.com/Embedded-Penguin/ePenguin-igloo/"
 readme = "README.md"
-description = "This project is abandoned. If you'd like the name, please email help@crates.io. I consent to the transfer to the first person who asks for it."
+description = "This project is abandoned and will not work. If you'd like the name, please email help@crates.io. I consent to the transfer to the first person who asks for it."
 license="GPL-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-igloo_core = { path = "./igloo_core" }
-igloo_agent = { path = "./igloo_agent" }
-igloo_util = { path = "./igloo_util" }
 
 
 [workspace]
