@@ -170,7 +170,7 @@ dependencies = [
 
 [[package]]
 name = "igloo"
-version = "0.1.1"
+version = "1.0.0"
 
 [[package]]
 name = "igloo_agent"
