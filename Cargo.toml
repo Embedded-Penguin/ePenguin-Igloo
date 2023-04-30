@@ -1,6 +1,6 @@
 [package]
 name = "igloo"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Penguin <...>"]
 edition = "2021"
 repository = "https://github.com/Embedded-Penguin/ePenguin-igloo/"
