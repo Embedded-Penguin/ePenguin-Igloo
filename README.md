@@ -1,3 +1,4 @@
 # ePenguin-Igloo
 
-Unfortunately this project is abandoned for a bunch of reasons, mainly because the workload grew exponentially as new problems surfaced. If you'd like the name, please email help@crates.io. I consent to the transfer to the first person who asks for it.
+I am bringing this project back! It will still be an embedded project management tool, but it will also work for non-embedded projects.
+
